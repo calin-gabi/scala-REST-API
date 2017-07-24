@@ -3,6 +3,7 @@ package gabim.restapi.http.routes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
+import akka.http.scaladsl.server.Route
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import gabim.restapi.services.{AuthService, UsersService}
 
@@ -15,6 +16,7 @@ import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
+import akka.event.Logging
 
 class UsersServiceRoute(val authService: AuthService,
                         usersService: UsersService
@@ -32,6 +34,7 @@ class UsersServiceRoute(val authService: AuthService,
   val route = pathPrefix("users") {
     pathEndOrSingleSlash {
       get {
+        var users = getUsers().onComplete(u => u.foreach(r => println(r)))
         complete(getUsers().map(_.asJson))
       }
     } ~
