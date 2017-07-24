@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS records (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR (200) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+  date TIMESTAMP default CURRENT_DATE,
+  description VARCHAR(500),
+  amount REAL,
+  comment VARCHAR(500),
+  rev INT NOT NULL DEFAULT 0
+);
