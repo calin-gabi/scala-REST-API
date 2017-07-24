@@ -12,6 +12,7 @@ libraryDependencies ++= {
   Seq(
     "com.typesafe.akka" %% "akka-http-core" % akkaV,
     "com.typesafe.akka" %% "akka-http" % akkaV,
+    "ch.megard" %% "akka-http-cors" % "0.2.1",
     "de.heikoseeberger" %% "akka-http-circe" % "1.11.0",
 
     "com.typesafe.slick" %% "slick" % slickVersion,
