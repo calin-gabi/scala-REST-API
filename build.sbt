@@ -30,6 +30,8 @@ libraryDependencies ++= {
     "io.circe" %% "circe-generic" % circeV,
     "io.circe" %% "circe-parser" % circeV,
 
+    "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
+
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
     "com.typesafe.akka" %% "akka-http-testkit" % akkaV % "test",
     "ru.yandex.qatools.embed" % "postgresql-embedded" % "1.15" % "test"

@@ -8,18 +8,18 @@ case class UserEntity(
                        id: Option[Long] = None,
                        username: String,
                        password: String,
-                       role: String,
-                       last_login: DateTime,
-                       attempts: Int,
-                       lockoutdate: DateTime,
-                       twofactor: Boolean,
-                       email: String,
-                       emailconfirmed: Boolean,
-                       phone: String,
-                       phoneconfirmed: Boolean,
-                       active: Boolean,
-                       created: DateTime,
-                       rev: Long) {
+                       role: Option[String],
+                       last_login: Option[DateTime],
+                       attempts: Option[Int],
+                       lockoutdate: Option[DateTime],
+                       twofactor: Option[Boolean],
+                       email: Option[String],
+                       emailconfirmed: Option[Boolean],
+                       phone: Option[String],
+                       phoneconfirmed: Option[Boolean],
+                       active: Option[Boolean],
+                       created: Option[DateTime],
+                       rev: Option[Long]) {
   require(!username.isEmpty, "username.empty")
   require(!password.isEmpty, "password.empty")
 }
@@ -42,19 +42,19 @@ case class UserEntityUpdate(
   def merge(user: UserEntity): UserEntity = {
     UserEntity(
       user.id,
-      username.getOrElse(user.username),
-      password.getOrElse(user.password),
-      role.getOrElse(user.role),
-      last_login.getOrElse(user.last_login),
-      attempts.getOrElse(user.attempts),
-      lockoutdate.getOrElse(user.lockoutdate),
-      twofactor.getOrElse(user.twofactor),
-      email.getOrElse(user.email),
-      emailconfirmed.getOrElse(user.emailconfirmed),
-      phone.getOrElse(user.phone),
-      phoneconfirmed.getOrElse(user.phoneconfirmed),
-      active.getOrElse(user.active),
-      created.getOrElse(user.created),
-      rev.getOrElse(user.rev))
+      user.username,
+      user.password,
+      user.role,
+      user.last_login,
+      user.attempts,
+      user.lockoutdate,
+      user.twofactor,
+      user.email,
+      user.emailconfirmed,
+      user.phone,
+      user.phoneconfirmed,
+      user.active,
+      user.created,
+      user.rev )
   }
 }

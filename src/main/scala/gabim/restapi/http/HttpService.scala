@@ -21,7 +21,7 @@ class HttpService(usersService: UsersService,
       get {
         complete("test")
       }
-    }~
+    } ~
       usersRouter.route ~
       authRouter.route
   }
