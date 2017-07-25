@@ -5,6 +5,7 @@ import gabim.restapi.models.db.TokenEntityTable
 import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.mindrot.jbcrypt.BCrypt
 
 class AuthService(val databaseService: DatabaseService)(usersService: UsersService)(implicit executionContext: ExecutionContext) extends TokenEntityTable {
 
@@ -13,7 +14,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   def signIn(login: String, password: String): Future[Option[TokenEntity]] = {
     db.run(users.filter(u => u.username === login).result).flatMap { users =>
-      users.find(user => user.password == password) match {
+      users.find(user => BCrypt.checkpw(password, user.password)) match {
         case Some(user) => db.run(tokens.filter(_.userId === user.id).result.headOption).flatMap {
           case Some(token) => Future.successful(Some(token))
           case None        => createToken(user).map(token => Some(token))

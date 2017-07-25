@@ -33,9 +33,13 @@ class UsersServiceRoute(val authService: AuthService,
 
   val route = pathPrefix("users") {
     pathEndOrSingleSlash {
-      get {
-        var users = getUsers().onComplete(u => u.foreach(r => println(r)))
-        complete(getUsers().map(_.asJson))
+      authenticate { loggedUser =>
+        authorize(usersService canViewUsers loggedUser) {
+          get {
+            var users = getUsers().onComplete(u => u.foreach(r => println(r)))
+            complete(getUsers().map(_.asJson))
+          }
+        }
       }
     } ~
       pathPrefix("me") {
