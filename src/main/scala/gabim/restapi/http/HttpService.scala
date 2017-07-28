@@ -17,13 +17,7 @@ class HttpService(usersService: UsersService,
   val authRouter = new AuthServiceRoute(authService)
 
   val routes = {
-    path("test") {
-      get {
-        complete("test")
-      }
-    } ~
       usersRouter.route ~
       authRouter.route
   }
-
 }
