@@ -36,8 +36,8 @@ class UsersServiceRoute(val authService: AuthService,
       authenticate { loggedUser =>
         authorize(usersService canViewUsers loggedUser) {
           get {
-            var users = getUsers().onComplete(u => u.foreach(r => println(r)))
-            complete(getUsers().map(_.asJson))
+              var users = getUsers().onComplete(u => u.foreach(r => println(r)))
+              complete(getUsers().map(_.asJson))
           }
         }
       }
@@ -48,7 +48,7 @@ class UsersServiceRoute(val authService: AuthService,
             get {
               complete(loggedUser)
             } ~
-              post {
+              (post & authorize(usersService canUpdateUsers loggedUser)) {
                 entity(as[UserEntityUpdate]) { userUpdate =>
                   complete(updateUser(loggedUser.id.get, userUpdate).map(_.asJson))
                 }
@@ -57,20 +57,22 @@ class UsersServiceRoute(val authService: AuthService,
         }
       } ~
       pathPrefix(IntNumber) { id =>
-        pathEndOrSingleSlash {
-          get {
-            complete(getUserById(id).map(_.asJson))
-          } ~
-            post {
-              entity(as[UserEntityUpdate]) { userUpdate =>
-                complete(updateUser(id, userUpdate).map(_.asJson))
-              }
+        authenticate { loggedUser =>
+          (pathEndOrSingleSlash & authorize(usersService canUpdateUsers loggedUser)) {
+            get {
+              complete(getUserById(id).map(_.asJson))
             } ~
-            delete {
-              onSuccess(deleteUser(id)) { ignored =>
-                complete(NoContent)
+              post {
+                entity(as[UserEntityUpdate]) { userUpdate =>
+                  complete(updateUser(id, userUpdate).map(_.asJson))
+                }
+              } ~
+              delete {
+                onSuccess(deleteUser(id)) { ignored =>
+                  complete(NoContent)
+                }
               }
-            }
+          }
         }
       }
   }
