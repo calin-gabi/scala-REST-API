@@ -36,9 +36,9 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def deleteUser(id: Long): Future[Int] = db.run(users.filter(_.id === id).delete)
 
-  def canUpdateUsers(user: UserEntity) = user.role == "admin"
-  def canViewUsers(user: UserEntity) = user.role == "manager"
+  def canUpdateUsers(user: UserEntity) = user.role == Some("admin")
+  def canViewUsers(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
 
-  def canUpdateRecords(user: UserEntity) = Seq("admin", "manager").contains(user.role)
-  def canViewRecords(user: UserEntity) = Seq("admin", "manager", "user").contains(user.role)
+  def canUpdateRecords(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
+  def canViewRecords(user: UserEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
 }
