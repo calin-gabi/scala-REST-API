@@ -19,8 +19,8 @@ class HttpService(usersService: UsersService,
   val recordsRouter = new RecordsServiceRoute(authService, recordsService, usersService)
 
   val routes = {
-      usersRouter.route ~
-      authRouter.route ~
-      recordsRouter.route
+    usersRouter.route ~
+    authRouter.route ~
+    recordsRouter.route
   }
 }

@@ -18,7 +18,7 @@ trait RecordEntityTable {
     def date = column[DateTime]("date")
     def description = column[String]("description")
     def amount = column[Double]("amount")
-    def comment = column[String]("comment")
+    def comment = column[Option[String]]("comment")
     def rev = column[Int]("rev")
 
     def * = (id, userId, date, description, amount, comment, rev) <> ((RecordEntity.apply _).tupled, RecordEntity.unapply)

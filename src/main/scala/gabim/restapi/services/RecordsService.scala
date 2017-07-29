@@ -1,6 +1,6 @@
 package gabim.restapi.services
 
-import gabim.restapi.models.{RecordEntity, RecordEntityUpdate}
+import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity}
 import gabim.restapi.models.db.RecordEntityTable
 import gabim.restapi.utilities.DatabaseService
 
@@ -25,4 +25,7 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   }
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
+
+  def canUpdateRecords(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
+  def canViewRecords(user: UserEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
 }
