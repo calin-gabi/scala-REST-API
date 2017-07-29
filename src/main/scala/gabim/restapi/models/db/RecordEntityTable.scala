@@ -14,13 +14,15 @@ trait RecordEntityTable {
 
   class Record(tag: Tag) extends Table[RecordEntity](tag, "records") {
     def id = column[Long]("id", O.PrimaryKey)
-    def username = column[String]("username")
+    def userId = column[Long]("user_id")
     def date = column[DateTime]("date")
     def description = column[String]("description")
     def amount = column[Double]("amount")
     def comment = column[String]("comment")
     def rev = column[Int]("rev")
 
-    def * = (id, username, date, description, amount, comment, rev) <> ((RecordEntity.apply _).tupled, RecordEntity.unapply)
+    def * = (id, userId, date, description, amount, comment, rev) <> ((RecordEntity.apply _).tupled, RecordEntity.unapply)
   }
+
+  protected val records = TableQuery[Record]
 }

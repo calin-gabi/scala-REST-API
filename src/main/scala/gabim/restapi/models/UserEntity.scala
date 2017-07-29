@@ -42,19 +42,19 @@ case class UserEntityUpdate(
   def merge(user: UserEntity): UserEntity = {
     UserEntity(
       user.id,
-      user.username,
-      user.password,
-      user.role,
-      user.last_login,
-      user.attempts,
-      user.lockoutdate,
-      user.twofactor,
-      user.email,
-      user.emailconfirmed,
-      user.phone,
-      user.phoneconfirmed,
-      user.active,
+      username.getOrElse(user.username),
+      password.getOrElse(user.password),
+      role.orElse(user.role),
+      last_login.orElse(user.last_login),
+      attempts.orElse(user.attempts),
+      lockoutdate.orElse(user.lockoutdate),
+      twofactor.orElse(user.twofactor),
+      email.orElse(user.email),
+      emailconfirmed.orElse(user.emailconfirmed),
+      phone.orElse(user.phone),
+      phoneconfirmed.orElse(user.phoneconfirmed),
+      active.orElse(user.active),
       user.created,
-      user.rev )
+      user.rev  )
   }
 }

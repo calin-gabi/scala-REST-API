@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import gabim.restapi.http.HttpService
-import gabim.restapi.services.{AuthService, UsersService}
+import gabim.restapi.services.{AuthService, RecordsService, UsersService}
 import gabim.restapi.utilities.{Config, DatabaseService, FlywayService}
 
 import scala.concurrent.ExecutionContext
@@ -23,8 +23,9 @@ object Main extends Config with App {
 
   val usersService = new UsersService(databaseService)
   val authService = new AuthService(databaseService)(usersService)
+  val recordsService = new RecordsService(databaseService)
 
-  val httpService = new HttpService(usersService, authService)
+  val httpService = new HttpService(usersService, recordsService, authService)
 
   Http().bindAndHandle(httpService.routes, httpHost, httpPort)
 }

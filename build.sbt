@@ -1,7 +1,7 @@
 name := "rest-api"
 
 version := "1.0.0"
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.1"
 
 libraryDependencies ++= {
   val akkaV = "10.0.4"
