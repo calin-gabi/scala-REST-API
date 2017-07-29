@@ -1,6 +1,7 @@
 package gabim.restapi.web
 
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.StatusCodes.NoContent
 import akka.http.scaladsl.model.{HttpEntity, HttpHeader, MediaTypes}
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
@@ -78,6 +79,28 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
       val authorization = "Token" -> testTokens.find(_.userId.contains(testUser.id.get)).get.token
       Get("/users/me") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
+      }
+    }
+
+    "get user by id" in new adminContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
+      Get(s"/users/${userId}") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(StatusCodes.OK)
+        //responseAs[UserEntity] should be(testUser)
+      }
+    }
+
+    "delete user by id" in new adminContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
+      Delete(s"/users/${userId}") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(NoContent)
+        whenReady(getUserById(testUser.id.get)) { result =>
+          result should be(None: Option[UserEntity])
+        }
       }
     }
 

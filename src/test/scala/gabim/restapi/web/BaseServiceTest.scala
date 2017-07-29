@@ -3,11 +3,12 @@ package gabim.restapi.web
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import gabim.restapi.http.HttpService
-import gabim.restapi.models.UserEntity
+import gabim.restapi.models.{RecordEntity, UserEntity}
 import gabim.restapi.services.{AuthService, RecordsService, UsersService}
 import gabim.restapi.utilities.DatabaseService
 import org.scalatest._
 import gabim.restapi.web.utils.InMemoryPostgresStorage._
+import org.joda.time.DateTime
 import sun.security.util.Password
 
 import scala.concurrent.duration._
@@ -48,5 +49,15 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
   def provisionTokensForUsers(usersList: Seq[UserEntity]) = {
     val savedTokens = usersList.map(authService.createToken)
     Await.result(Future.sequence(savedTokens), 5.seconds)
+  }
+
+  def provisionRecordsList(usersList: Seq[UserEntity]) = {
+    val savedRecords = usersList.map { user =>
+      val record = RecordEntity(Random.nextInt(), user.id.get, new DateTime(), RandomString(20), 2, Option(RandomString(30)), 1)
+      record
+    }.map(recordsService.createRecord)
+
+    val result = Await.result(Future.sequence(savedRecords), 5.seconds)
+    result
   }
 }

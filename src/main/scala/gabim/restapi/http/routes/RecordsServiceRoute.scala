@@ -1,9 +1,9 @@
 package gabim.restapi.http.routes
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import gabim.restapi.http.SecurityDirectives
@@ -26,6 +26,26 @@ class RecordsServiceRoute(val authService: AuthService,
   import StatusCodes._
   import recordsService._
 
+
+  implicit def recordsRejectionHandler =
+    RejectionHandler.newBuilder()
+      .handle { case MissingHeaderRejection("Token") =>
+        complete(HttpResponse(BadRequest, entity = "No token, no service!!!"))
+      }
+      .handle { case AuthorizationFailedRejection =>
+        complete((Forbidden, "You have no power here!"))
+      }
+      .handle { case ValidationRejection(msg, _) =>
+        complete((InternalServerError, "That wasn't valid! " + msg))
+      }
+      .handleAll[MethodRejection] { methodRejections =>
+      val names = methodRejections.map(_.supported.name)
+      complete((MethodNotAllowed, s"Can't do that! Supported: ${names mkString " or "}!"))
+      }
+      .handleNotFound {
+        complete((NotFound, "Not here!")) }
+      .result()
+
   implicit val TimestampFormat : Encoder[DateTime] with Decoder[DateTime] = new Encoder[DateTime] with Decoder[DateTime] {
     override def apply(a: DateTime): Json = Encoder.encodeLong.apply(a.getMillis)
 
@@ -33,10 +53,25 @@ class RecordsServiceRoute(val authService: AuthService,
   }
 
   val route = pathPrefix("records") {
-      pathPrefix(IntNumber) { id =>
+    pathEndOrSingleSlash {
+      get {
+        complete("all records")
+      }
+    }
+    path(LongNumber) { id =>
+      println(id)
+      get {
+        complete(getRecordsByUserId(id).map(_.asJson))
+      }
+    }
+  }
+
+/*  val route = pathPrefix("records") {
+    handleRejections(recordsRejectionHandler) {
+      pathPrefix(LongNumber) { id =>
         authenticate { loggedUser =>
-          (pathEndOrSingleSlash & authorize(usersService canViewRecords  loggedUser)) {
-            get {
+          (pathEndOrSingleSlash & authorize(recordsService canViewRecords loggedUser))  {
+            get{
               complete(getRecordsByUserId(id).map(_.asJson))
             } ~
               post {
@@ -52,6 +87,7 @@ class RecordsServiceRoute(val authService: AuthService,
           }
         }
       }
-  }
+    }
+  }*/
 
 }

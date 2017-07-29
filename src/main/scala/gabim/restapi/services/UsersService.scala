@@ -39,7 +39,4 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def canUpdateUsers(user: UserEntity) = user.role == Some("admin")
   def canViewUsers(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-
-  def canUpdateRecords(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-  def canViewRecords(user: UserEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
 }

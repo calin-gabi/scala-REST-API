@@ -31,7 +31,7 @@ class UsersServiceRoute(val authService: AuthService,
     override def apply(c: HCursor): Result[DateTime] = Decoder.decodeLong.map(s => new DateTime(s)).apply(c)
   }
 
-  implicit def myRejectionHandler =
+  implicit def usersRejectionHandler =
     RejectionHandler.newBuilder()
       .handle { case MissingHeaderRejection("Token") =>
         complete(HttpResponse(BadRequest, entity = "No token, no service!!!"))
@@ -50,7 +50,7 @@ class UsersServiceRoute(val authService: AuthService,
       .result()
 
   val route = pathPrefix("users") {
-    handleRejections(myRejectionHandler) {
+    handleRejections(usersRejectionHandler) {
       pathEndOrSingleSlash {
         authenticate { loggedUser =>
           get {
@@ -74,7 +74,7 @@ class UsersServiceRoute(val authService: AuthService,
             }
           }
         } ~
-        pathPrefix(IntNumber) { id =>
+        pathPrefix(LongNumber) { id =>
           authenticate { loggedUser =>
             (pathEndOrSingleSlash & authorize(usersService canUpdateUsers loggedUser)) {
               get {
