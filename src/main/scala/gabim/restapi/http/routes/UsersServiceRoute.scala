@@ -1,9 +1,9 @@
 package gabim.restapi.http.routes
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import gabim.restapi.services.{AuthService, UsersService}
 
@@ -31,50 +31,69 @@ class UsersServiceRoute(val authService: AuthService,
     override def apply(c: HCursor): Result[DateTime] = Decoder.decodeLong.map(s => new DateTime(s)).apply(c)
   }
 
-  val route = pathPrefix("users") {
-    pathEndOrSingleSlash {
-      authenticate { loggedUser =>
-        authorize(usersService canViewUsers loggedUser) {
-          get {
-              var users = getUsers().onComplete(u => u.foreach(r => println(r)))
-              complete(getUsers().map(_.asJson))
-          }
-        }
+  implicit def myRejectionHandler =
+    RejectionHandler.newBuilder()
+      .handle { case MissingHeaderRejection("Token") =>
+        complete(HttpResponse(BadRequest, entity = "No token, no service!!!"))
       }
-    } ~
-      pathPrefix("me") {
-        pathEndOrSingleSlash {
-          authenticate { loggedUser =>
-            get {
-              complete(loggedUser)
-            } ~
-              (post & authorize(usersService canUpdateUsers loggedUser)) {
-                entity(as[UserEntityUpdate]) { userUpdate =>
-                  complete(updateUser(loggedUser.id.get, userUpdate).map(_.asJson))
-                }
-              }
+      .handle { case AuthorizationFailedRejection =>
+        complete((Forbidden, "You have no power here!"))
+      }
+      .handle { case ValidationRejection(msg, _) =>
+        complete((InternalServerError, "That wasn't valid! " + msg))
+      }
+      .handleAll[MethodRejection] { methodRejections =>
+      val names = methodRejections.map(_.supported.name)
+      complete((MethodNotAllowed, s"Can't do that! Supported: ${names mkString " or "}!"))
+    }
+      .handleNotFound { complete((NotFound, "Not here!")) }
+      .result()
+
+  val route = pathPrefix("users") {
+    handleRejections(myRejectionHandler) {
+      pathEndOrSingleSlash {
+        authenticate { loggedUser =>
+          get {
+            authorize(usersService canViewUsers loggedUser) {
+              complete(getUsers().map(_.asJson))
+            }
           }
         }
       } ~
-      pathPrefix(IntNumber) { id =>
-        authenticate { loggedUser =>
-          (pathEndOrSingleSlash & authorize(usersService canUpdateUsers loggedUser)) {
-            get {
-              complete(getUserById(id).map(_.asJson))
-            } ~
-              post {
-                entity(as[UserEntityUpdate]) { userUpdate =>
-                  complete(updateUser(id, userUpdate).map(_.asJson))
-                }
+        pathPrefix("me") {
+          pathEndOrSingleSlash {
+            authenticate { loggedUser =>
+              get {
+                complete(loggedUser)
               } ~
-              delete {
-                onSuccess(deleteUser(id)) { ignored =>
-                  complete(NoContent)
+                post {
+                  entity(as[UserEntityUpdate]) { userUpdate =>
+                    complete(updateUser(loggedUser.id.get, userUpdate).map(_.asJson))
+                  }
                 }
-              }
+            }
+          }
+        } ~
+        pathPrefix(IntNumber) { id =>
+          authenticate { loggedUser =>
+            (pathEndOrSingleSlash & authorize(usersService canUpdateUsers loggedUser)) {
+              get {
+                complete(getUserById(id).map(_.asJson))
+              } ~
+                post {
+                  entity(as[UserEntityUpdate]) { userUpdate =>
+                    complete(updateUser(id, userUpdate).map(_.asJson))
+                  }
+                } ~
+                delete {
+                  onSuccess(deleteUser(id)) { ignored =>
+                    complete(NoContent)
+                  }
+                }
+            }
           }
         }
-      }
+    }
   }
 
 }

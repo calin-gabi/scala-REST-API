@@ -28,11 +28,13 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     usersService.createUser(newUser).flatMap(user => createToken(user))
   }
 
-  def authenticate(token: String): Future[Option[UserEntity]] =
+  def authenticate(token: String): Future[Option[UserEntity]] = {
+    //println(tokens)
     db.run((for {
       token <- tokens.filter(_.token === token)
       user <- users.filter(_.id === token.userId)
     } yield user).result.headOption)
+  }
 
   def createToken(user: UserEntity): Future[TokenEntity] = db.run(tokens returning tokens += TokenEntity(userId = user.id))
 
