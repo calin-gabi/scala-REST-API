@@ -22,8 +22,9 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)
-    val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, Option("user"), None, Option(0), None, Option(false),
-      Option(user.username), Option(false), user.phone, Option(false), Option(true), None, Option(0))
+    val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, user.role, user.last_login, user.attempts,
+      user.lockoutdate, user.twofactor, user.email, user.emailconfirmed, user.phone, user.phoneconfirmed,
+      user.active, user.created, user.rev)
     db.run(users returning users += dbUser)
   }
 
@@ -38,7 +39,4 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def canUpdateUsers(user: UserEntity) = user.role == Some("admin")
   def canViewUsers(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-
-  def canUpdateRecords(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-  def canViewRecords(user: UserEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
 }

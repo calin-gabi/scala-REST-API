@@ -6,33 +6,35 @@ import com.github.tototoshi.slick.PostgresJodaSupport._
 
 case class RecordEntity(
                        id: Long,
-                       username: String,
+                       userId: Long,
                        date: DateTime,
                        description: String,
                        amount: Double,
-                       comment: String,
+                       comment: Option[String],
                        rev: Int
                         ) {
-
+  require(amount >= 0, "Amount can not be negative!")
 }
 
 case class RecordEntityUpdate(
-                               username: Option[String] = None,
+                               userId: Option[Long] = None,
                                date: Option[DateTime] = None,
                                description: Option[String] = None,
                                amount: Option[Double] = None,
-                               comment: Option[String] = None,
-                               rev: Option[Int] = None
+                               comment: Option[String] = None
                              ) {
   def merge(record: RecordEntity): RecordEntity = {
+    def newRev(rev: Int) = {
+      rev + 1
+    }
     RecordEntity(
       record.id,
-      username.getOrElse(record.username),
+      userId.getOrElse(record.userId),
       date.getOrElse(record.date),
       description.getOrElse(record.description),
       amount.getOrElse(record.amount),
-      comment.getOrElse(record.comment),
-      rev.getOrElse(record.rev)
+      comment.orElse(record.comment),
+      newRev(record.rev)
     )
   }
 }
