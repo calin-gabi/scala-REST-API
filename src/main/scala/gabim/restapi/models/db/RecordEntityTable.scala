@@ -13,7 +13,7 @@ trait RecordEntityTable {
   import databaseService.driver.api._
 
   class Record(tag: Tag) extends Table[RecordEntity](tag, "records") {
-    def id = column[Long]("id", O.PrimaryKey)
+    def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[Long]("user_id")
     def date = column[DateTime]("date")
     def description = column[String]("description")
