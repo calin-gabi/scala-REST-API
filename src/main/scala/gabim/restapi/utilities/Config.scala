@@ -14,3 +14,5 @@ trait Config {
   val dbUser = databaseConfig.getString("user")
   val dbPassword = databaseConfig.getString("password")
 }
+
+class ClassConfig extends Config

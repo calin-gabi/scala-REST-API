@@ -1,31 +1,40 @@
 package gabim.restapi
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import com.example.{MonitorActor, NodeConfig}
 import gabim.restapi.http.HttpService
 import gabim.restapi.services.{AuthService, RecordsService, UsersService}
-import gabim.restapi.utilities.{Config, DatabaseService, FlywayService}
+import gabim.restapi.utilities.{ClassConfig, DatabaseService, FlywayService}
 
 import scala.concurrent.ExecutionContext
 
-object Main extends Config with App {
-  implicit val actorSystem = ActorSystem()
-  implicit val executor: ExecutionContext = actorSystem.dispatcher
-  implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
+object Main extends App{
+  val nodeConfig = NodeConfig parse args
 
-  val flywayService = new FlywayService(jdbcUrl, dbUser, dbPassword)
-  flywayService.migrateDatabaseSchema
+  // If a config could be parsed - start the system
+  nodeConfig map { c =>
 
-  val databaseService = new DatabaseService(jdbcUrl, dbUser, dbPassword)
+    val config = new ClassConfig
 
-  val usersService = new UsersService(databaseService)
-  val authService = new AuthService(databaseService)(usersService)
-  val recordsService = new RecordsService(databaseService)
+      implicit val actorSystem = ActorSystem()
+      implicit val executor: ExecutionContext = actorSystem.dispatcher
+      implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
+      implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-  val httpService = new HttpService(usersService, recordsService, authService)
+      val flywayService = new FlywayService(config.jdbcUrl, config.dbUser, config.dbPassword)
+      flywayService.migrateDatabaseSchema
 
-  Http().bindAndHandle(httpService.routes, httpHost, httpPort)
+      val databaseService = new DatabaseService(config.jdbcUrl, config.dbUser, config.dbPassword)
+
+      val usersService = new UsersService(databaseService)
+      val authService = new AuthService(databaseService)(usersService)
+      val recordsService = new RecordsService(databaseService)
+
+      val httpService = new HttpService(usersService, recordsService, authService)
+
+      Http().bindAndHandle(httpService.routes, config.httpHost, config.httpPort)
+  }
 }
