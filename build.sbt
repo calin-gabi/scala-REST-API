@@ -3,6 +3,12 @@ name := "rest-api"
 version := "1.0.0"
 scalaVersion := "2.12.1"
 
+enablePlugins(JavaAppPackaging)
+
+maintainer := "Gabriel Munteanu"
+
+packageSummary := s"Akka 2.4.17 Server"
+
 libraryDependencies ++= {
   val akkaV = "10.0.4"
   val scalaTestV = "3.0.1"
@@ -43,19 +49,16 @@ libraryDependencies ++= {
   )
 }
 
-Revolver.settings
-enablePlugins(JavaAppPackaging)
-enablePlugins(DockerPlugin)
+//Revolver.settings
+//enablePlugins(DockerPlugin)
 
-dockerExposedPorts := Seq(9000)
-dockerEntrypoint := Seq("bin/%s" format executableScriptName.value, "-Dconfig.resource=docker.conf")
-
-packageSummary := s"Akka 2.4.17 Server"
+//dockerExposedPorts := Seq(9000)
+//dockerEntrypoint := Seq("bin/%s" format executableScriptName.value, "-Dconfig.resource=docker.conf")
 
 // Create custom run tasks to start a seed and a cluster node
 // http://www.scala-sbt.org/0.13.0/docs/faq.html#how-can-i-create-a-custom-run-task-in-addition-to-run
 lazy val runSeed = taskKey[Unit]("Start the seed node on 127.0.0.1:2551")
-fullRunTask(runSeed, Compile, "com.example.Main", "--seed")
+fullRunTask(runSeed, Compile, "gabim.restapi.Main", "--seed")
 fork in runSeed := true
 
 javaOptions in runSeed ++= Seq(
@@ -64,7 +67,7 @@ javaOptions in runSeed ++= Seq(
 )
 
 lazy val runNode = taskKey[Unit]("Start a node on 127.0.0.1:2552")
-fullRunTask(runNode, Compile, "com.example.Main", "127.0.0.1:2551")
+fullRunTask(runNode, Compile, "gabim.restapi.Main", "127.0.0.1:2551")
 fork in runNode := true
 
 javaOptions in runNode ++= Seq(
