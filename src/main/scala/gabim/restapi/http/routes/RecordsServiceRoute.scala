@@ -7,7 +7,7 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import gabim.restapi.http.SecurityDirectives
-import gabim.restapi.models.{RecordEntityUpdate, UserEntityUpdate}
+import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntityUpdate}
 import gabim.restapi.services.{AuthService, RecordsService, UsersService}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
@@ -53,41 +53,38 @@ class RecordsServiceRoute(val authService: AuthService,
   }
 
   val route = pathPrefix("records") {
-    pathEndOrSingleSlash {
-      get {
-        complete("all records")
-      }
-    }
-    path(LongNumber) { id =>
-      println(id)
-      get {
-        complete(getRecordsByUserId(id).map(_.asJson))
-      }
-    }
-  }
-
-/*  val route = pathPrefix("records") {
     handleRejections(recordsRejectionHandler) {
-      pathPrefix(LongNumber) { id =>
+      pathPrefix(LongNumber) { userId => {
         authenticate { loggedUser =>
           (pathEndOrSingleSlash & authorize(recordsService canViewRecords loggedUser))  {
             get{
-              complete(getRecordsByUserId(id).map(_.asJson))
+              complete(getRecordsByUserId(userId).map(_.asJson))
             } ~
-              post {
-                entity(as[RecordEntityUpdate]) { recordUpdate =>
-                  complete(updateRecord(id, recordUpdate).map(_.asJson))
-                }
-              } ~
-              delete {
-                onSuccess(deleteRecord(id)) { ignored =>
-                  complete(NoContent)
+              (post & authorize(recordsService canUpdateRecords loggedUser)){
+                entity(as[RecordEntity]) { newRecord =>
+                  complete(createRecord(newRecord))
                 }
               }
+            } ~
+            pathPrefix(LongNumber) { recordId => {
+              (pathEndOrSingleSlash & authorize(recordsService canUpdateRecords loggedUser)){
+                post {
+                  entity(as[RecordEntityUpdate]) { recordUpdate => {
+                    complete(Created -> updateRecord(recordId, recordUpdate).map(_.asJson))
+                  }
+                  }
+                } ~
+                  delete {
+                    onSuccess(deleteRecord(recordId)) { ignored =>
+                      complete(Accepted -> s"record ${recordId} deleted")
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     }
-  }*/
-
+  }
 }

@@ -5,7 +5,7 @@ import org.joda.time.DateTime
 import com.github.tototoshi.slick.PostgresJodaSupport._
 
 case class RecordEntity(
-                       id: Long,
+                       id: Option[Long],
                        userId: Long,
                        date: DateTime,
                        description: String,
