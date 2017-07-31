@@ -22,6 +22,7 @@ libraryDependencies ++= {
     "de.heikoseeberger" %% "akka-http-circe" % "1.11.0",
 
     "com.typesafe.slick" %% "slick" % slickVersion,
+    "org.slf4j" % "slf4j-nop" % "1.6.4",
     "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
     "org.flywaydb" % "flyway-core" % "3.2.1",
 
@@ -57,6 +58,7 @@ libraryDependencies ++= {
 
 // Create custom run tasks to start a seed and a cluster node
 // http://www.scala-sbt.org/0.13.0/docs/faq.html#how-can-i-create-a-custom-run-task-in-addition-to-run
+/*
 lazy val runSeed = taskKey[Unit]("Start the seed node on 127.0.0.1:2551")
 fullRunTask(runSeed, Compile, "gabim.restapi.Main", "--seed")
 fork in runSeed := true
@@ -73,4 +75,4 @@ fork in runNode := true
 javaOptions in runNode ++= Seq(
   "-Dclustering.ip=127.0.0.1",
   "-Dclustering.port=2552"
-)
+)*/

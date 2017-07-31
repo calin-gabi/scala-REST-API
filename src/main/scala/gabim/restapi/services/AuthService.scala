@@ -1,6 +1,6 @@
 package gabim.restapi.services
 
-import gabim.restapi.models.{TokenEntity, UserEntity}
+import gabim.restapi.models.{TokenEntity, UserEntity, UserResponseEntity}
 import gabim.restapi.models.db.TokenEntityTable
 import gabim.restapi.utilities.DatabaseService
 
@@ -12,19 +12,22 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
   import databaseService._
   import databaseService.driver.api._
 
-  def signIn(login: String, password: String): Future[Option[TokenEntity]] = {
+  def signIn(login: String, password: String): Future[Option[UserResponseEntity]] = {
     db.run(users.filter(u => u.username === login).result).flatMap { users =>
       users.find(user => BCrypt.checkpw(password, user.password)) match {
         case Some(user) => db.run(tokens.filter(_.userId === user.id).result.headOption).flatMap {
-          case Some(token) => Future.successful(Some(token))
-          case None        => createToken(user).map(token => Some(token))
+          case Some(token) => {
+            usersService.getUserProfileByToken(user.username ,token)
+            //Future.successful(response_)
+          }
+          case None        => createToken(user)
         }
         case None => Future.successful(None)
       }
     }
   }
 
-  def signUp(newUser: UserEntity): Future[TokenEntity] = {
+  def signUp(newUser: UserEntity): Future[Option[UserResponseEntity]] = {
     usersService.createUser(newUser).flatMap(user => createToken(user))
   }
 
@@ -36,6 +39,10 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     } yield user).result.headOption)
   }
 
-  def createToken(user: UserEntity): Future[TokenEntity] = db.run(tokens returning tokens += TokenEntity(userId = user.id))
+  def createToken(user: UserEntity): Future[Option[UserResponseEntity]] = {
+    val token_ = TokenEntity(userId = user.id)
+    db.run(tokens returning tokens += token_)
+    usersService.getUserProfileByToken(user.username, token_)
+  }
 
 }
