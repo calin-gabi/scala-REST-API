@@ -12,29 +12,30 @@ import gabim.restapi.utilities.{ClassConfig, DatabaseService, FlywayService}
 import scala.concurrent.ExecutionContext
 
 object Main extends App{
-  val nodeConfig = NodeConfig parse args
+/*  val nodeConfig = NodeConfig parse args
 
   // If a config could be parsed - start the system
   nodeConfig map { c =>
+  }*/
 
-    val config = new ClassConfig
 
-      implicit val actorSystem = ActorSystem()
-      implicit val executor: ExecutionContext = actorSystem.dispatcher
-      implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
-      implicit val materializer: ActorMaterializer = ActorMaterializer()
+  val config = new ClassConfig
 
-      val flywayService = new FlywayService(config.jdbcUrl, config.dbUser, config.dbPassword)
-      flywayService.migrateDatabaseSchema
+  implicit val actorSystem = ActorSystem()
+  implicit val executor: ExecutionContext = actorSystem.dispatcher
+  implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-      val databaseService = new DatabaseService(config.jdbcUrl, config.dbUser, config.dbPassword)
+  val flywayService = new FlywayService(config.jdbcUrl, config.dbUser, config.dbPassword)
+  flywayService.migrateDatabaseSchema
 
-      val usersService = new UsersService(databaseService)
-      val authService = new AuthService(databaseService)(usersService)
-      val recordsService = new RecordsService(databaseService)
+  val databaseService = new DatabaseService(config.jdbcUrl, config.dbUser, config.dbPassword)
 
-      val httpService = new HttpService(usersService, recordsService, authService)
+  val usersService = new UsersService(databaseService)
+  val authService = new AuthService(databaseService)(usersService)
+  val recordsService = new RecordsService(databaseService)
 
-      Http().bindAndHandle(httpService.routes, config.httpHost, config.httpPort)
-  }
+  val httpService = new HttpService(usersService, recordsService, authService)
+
+  Http().bindAndHandle(httpService.routes, config.httpHost, config.httpPort)
 }
