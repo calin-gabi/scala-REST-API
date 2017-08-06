@@ -1,12 +1,11 @@
 package gabim.restapi.models
 
 case class UserProfileEntity(
-                            username: String,
-                            first_name: String,
-                            last_name: String,
-                            picture_url: String
+                            user_id: Long,
+                            first_name: Option[String],
+                            last_name: Option[String],
+                            picture_url: Option[String]
                             ) {
-  require(!username.isEmpty, "username.empty")
 }
 case class UserProfileEntityUpdate(
                                     username: Option[String] = None,
@@ -16,10 +15,10 @@ case class UserProfileEntityUpdate(
 
   def merge(userProfile: UserProfileEntity): UserProfileEntity = {
     UserProfileEntity(
-      userProfile.username,
-      first_name.getOrElse(userProfile.first_name),
-      last_name.getOrElse(userProfile.last_name),
-      picture_url.getOrElse(userProfile.picture_url)
+      userProfile.user_id,
+      first_name.orElse(userProfile.first_name),
+      last_name.orElse(userProfile.last_name),
+      picture_url.orElse(userProfile.picture_url)
     )
   }
 }

@@ -1,15 +1,14 @@
 package gabim.restapi.services
 
-import gabim.restapi.models.{UserEntity, UserEntityUpdate}
-import gabim.restapi.models.db.UserEntityTable
+import gabim.restapi.models._
+import gabim.restapi.models.db.{UserEntityTable, UsersProfileEntityTable}
 import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{ExecutionContext, Future}
-
 import com.github.t3hnar.bcrypt._
 import org.mindrot.jbcrypt.BCrypt
 
-class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable {
+class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable {
 
   import databaseService._
   import databaseService.driver.api._
@@ -19,6 +18,10 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   def getUserById(id: Long): Future[Option[UserEntity]] = db.run(users.filter(_.id === id).result.headOption)
 
   def getUserByLogin(login: String): Future[Option[UserEntity]] = db.run(users.filter(_.username === login).result.headOption)
+
+  def getUserProfileByToken(username: String, token: TokenEntity): Future[Option[UserResponseEntity]] = db.run(usersProfiles
+    .filter(_.user_id === token.userId).result.headOption)
+    .map( row => Option(new UserResponseEntity(username, Option(token.token) , row)))
 
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)

@@ -12,15 +12,17 @@ import scala.concurrent.ExecutionContext
 class HttpService(usersService: UsersService,
                   recordsService: RecordsService,
                   authService: AuthService
-                 )(implicit executionContext: ExecutionContext) {
+                 )(implicit executionContext: ExecutionContext) extends CORSConfig {
 
   val usersRouter = new UsersServiceRoute(authService, usersService)
   val authRouter = new AuthServiceRoute(authService)
   val recordsRouter = new RecordsServiceRoute(authService, recordsService, usersService)
 
   val routes = {
-    usersRouter.route ~
-    authRouter.route ~
-    recordsRouter.route
+    corsHandler{
+        usersRouter.route ~
+          authRouter.route ~
+          recordsRouter.route
+    }
   }
 }

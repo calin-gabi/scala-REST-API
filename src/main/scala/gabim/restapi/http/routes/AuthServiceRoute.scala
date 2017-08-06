@@ -40,12 +40,9 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
     pathPrefix("auth") {
     path("signIn") {
       pathEndOrSingleSlash {
-          (post & extractCredentials) { credentials => {
-            val token = credentials.get.token()
-            val bytes = Base64.rfc2045.decodeFast(token)
-            val userPass = (new String(bytes, `UTF-8`.nioCharset)).split(":")
-            val loginPassword = new LoginPassword(userPass(0), userPass(1))
-            complete(signIn(loginPassword.login, loginPassword.password).map(_.asJson))
+          post {
+            entity(as[LoginPassword]){ loginPassword =>
+            complete(signIn(loginPassword.username, loginPassword.password).map(_.asJson))
           }
         }
       }
@@ -61,6 +58,6 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
       }
   }
 
-  private case class LoginPassword(login: String, password: String)
+  private case class LoginPassword(username: String, password: String)
 
 }
