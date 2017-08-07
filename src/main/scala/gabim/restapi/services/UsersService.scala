@@ -23,6 +23,11 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
     .filter(_.user_id === token.userId).result.headOption)
     .map( row => Option(new UserResponseEntity(username, Option(token.token) , row)))
 
+  def isAvailable(username: String): Future[String] = db.run(users.filter(_.username === username).result.headOption).map {
+    case Some(user) => "false"
+    case None => "true"
+  }
+
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)
     val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, user.role, user.last_login, user.attempts,

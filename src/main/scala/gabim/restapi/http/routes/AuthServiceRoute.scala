@@ -47,6 +47,13 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
         }
       }
     } ~
+      path("isAuthenticated") {
+        pathEndOrSingleSlash {
+          (post & authenticate) { loggedUser =>
+            complete(true.asJson)
+          }
+        }
+      } ~
       path("signUp") {
         pathEndOrSingleSlash {
           post {

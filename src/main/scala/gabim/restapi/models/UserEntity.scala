@@ -58,3 +58,7 @@ case class UserEntityUpdate(
       user.rev  )
   }
 }
+
+case class UsernameAvailable(
+                             username: String
+                           )

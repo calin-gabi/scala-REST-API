@@ -9,7 +9,7 @@ import gabim.restapi.services.{AuthService, UsersService}
 
 import scala.concurrent.ExecutionContext
 import gabim.restapi.http.SecurityDirectives
-import gabim.restapi.models.{UserEntity, UserEntityUpdate}
+import gabim.restapi.models.{UserEntity, UserEntityUpdate, UsernameAvailable}
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.PostgresJodaSupport._
 import io.circe.Decoder.Result
@@ -60,6 +60,15 @@ class UsersServiceRoute(val authService: AuthService,
           }
         }
       } ~
+        pathPrefix("isAvailable") {
+          pathEndOrSingleSlash {
+            post {
+              entity(as[UsernameAvailable]) { username =>
+                complete(isAvailable(username.username).map(_.asJson))
+              }
+            }
+          }
+        } ~
         pathPrefix("me") {
           pathEndOrSingleSlash {
             authenticate { loggedUser =>
