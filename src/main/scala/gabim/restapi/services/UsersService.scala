@@ -6,6 +6,7 @@ import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{ExecutionContext, Future}
 import com.github.t3hnar.bcrypt._
+import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 
 class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable {
@@ -30,9 +31,11 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)
-    val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, user.role, user.last_login, user.attempts,
-      user.lockoutdate, user.twofactor, user.email, user.emailconfirmed, user.phone, user.phoneconfirmed,
-      user.active, user.created, user.rev)
+    println(user)
+    val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, user.role.orElse(Option("user")), user.last_login,
+      user.attempts.orElse(Option(0)), user.lockoutdate, user.twofactor.orElse(Option(false)),
+      user.email, user.emailconfirmed.orElse(Option(false)), user.phone, user.phoneconfirmed.orElse(Option(false)),
+      user.active.orElse(Option(true)), user.created.orElse(Option(new DateTime())), user.rev.orElse(Option(0)))
     db.run(users returning users += dbUser)
   }
 
