@@ -27,6 +27,8 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     }
   }
 
+  def getTokenUserByString(token: String): Future[Option[TokenEntity]] = db.run(tokens.filter(_.token === token).result.headOption)
+
   def signUp(newUser: UserEntity): Future[Option[UserResponseEntity]] = {
     usersService.createUser(newUser).flatMap(user => createToken(user))
   }
@@ -44,5 +46,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     db.run(tokens returning tokens += token_)
     usersService.getUserProfileByToken(user.username, token_)
   }
+
+  def deleteToken(token: String): Future[Int] = db.run(tokens.filter(_.token === token).delete)
 
 }
