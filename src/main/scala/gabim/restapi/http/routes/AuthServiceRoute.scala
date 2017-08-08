@@ -62,9 +62,19 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
             }
           }
         }
+      }~
+      path("signOut") {
+        pathEndOrSingleSlash {
+          (post & authenticate) { loggedUser =>
+            println(loggedUser)
+            complete(NoContent)
+          }
+        }
       }
   }
 
   private case class LoginPassword(username: String, password: String)
+
+  private case class Token(token: String)
 
 }
