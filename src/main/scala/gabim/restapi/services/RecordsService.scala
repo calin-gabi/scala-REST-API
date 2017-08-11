@@ -1,6 +1,6 @@
 package gabim.restapi.services
 
-import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity}
+import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity, UserResponseEntity}
 import gabim.restapi.models.db.RecordEntityTable
 import gabim.restapi.utilities.DatabaseService
 
@@ -18,7 +18,7 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] = db.run(records.filter(_.userId === id).result)
 
   def createRecord(record: RecordEntity) : Future[RecordEntity] = {
-    val newRecord: RecordEntity = new RecordEntity(None, record.userId, record.date, record.description,
+    val newRecord: RecordEntity = RecordEntity(None, record.userId, record.date, record.description,
       record.amount, record.comment, 0)
     db.run(records returning records += newRecord)
   }
@@ -34,6 +34,6 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
 
-  def canUpdateRecords(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-  def canViewRecords(user: UserEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
+  def canUpdateRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
+  def canViewRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
 }

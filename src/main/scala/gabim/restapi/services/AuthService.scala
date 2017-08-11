@@ -17,7 +17,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
       users.find(user => BCrypt.checkpw(password, user.password)) match {
         case Some(user) => db.run(tokens.filter(_.userId === user.id).result.headOption).flatMap {
           case Some(token) => {
-            usersService.getUserProfileByToken(user.username ,token)
+            usersService.getUserProfileByToken(token.token)
             //Future.successful(response_)
           }
           case None        => createToken(user)
@@ -33,18 +33,19 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     usersService.createUser(newUser).flatMap(user => createToken(user))
   }
 
-  def authenticate(token: String): Future[Option[UserEntity]] = {
+  def authenticate(token: String): Future[Option[UserResponseEntity]] = {
     //println(tokens)
-    db.run((for {
+/*    db.run((for {
       token <- tokens.filter(_.token === token)
       user <- users.filter(_.id === token.userId)
-    } yield user).result.headOption)
+    } yield user).result.headOption)*/
+    usersService.getUserProfileByToken(token)
   }
 
   def createToken(user: UserEntity): Future[Option[UserResponseEntity]] = {
     val token_ = TokenEntity(userId = user.id)
     db.run(tokens returning tokens += token_)
-    usersService.getUserProfileByToken(user.username, token_)
+    usersService.getUserProfileByToken(token_.token)
   }
 
   def deleteToken(token: String): Future[Int] = db.run(tokens.filter(_.token === token).delete)

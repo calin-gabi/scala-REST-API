@@ -7,6 +7,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.Credentials
 import akka.parboiled2.util.Base64
 import akka.http.scaladsl.model.HttpCharsets._
+import akka.http.scaladsl.server.directives.BasicDirectives.provide
+import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import com.github.t3hnar.bcrypt.BCrypt
 import org.mindrot.jbcrypt.BCrypt
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -15,7 +17,7 @@ import gabim.restapi.services.UsersService
 
 import scala.concurrent.{ExecutionContext, Future}
 import gabim.restapi.http.SecurityDirectives
-import gabim.restapi.models.UserEntity
+import gabim.restapi.models.{UserEntity, UserResponseEntity}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
@@ -49,8 +51,10 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
     } ~
       path("isAuthenticated") {
         pathEndOrSingleSlash {
-          (post & authenticate) { loggedUser =>
-            complete(true.asJson)
+          (get & optionalHeaderValueByName("Token")) { token =>
+            complete(
+              authService.authenticate(token.getOrElse("")).map(_.asJson)
+            )
           }
         }
       } ~
@@ -65,9 +69,8 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
       }~
       path("signOut") {
         pathEndOrSingleSlash {
-          (post & authenticate) { loggedUser =>
-            println(loggedUser)
-            complete(NoContent)
+          (post & optionalHeaderValueByName("Token")) { token =>
+            complete(authService.deleteToken(token.get))
           }
         }
       }

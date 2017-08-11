@@ -77,7 +77,7 @@ class UsersServiceRoute(val authService: AuthService,
               } ~
                 post {
                   entity(as[UserEntityUpdate]) { userUpdate =>
-                    complete(updateUser(loggedUser.id.get, userUpdate).map(_.asJson))
+                    complete(updateUser(loggedUser.id, userUpdate).map(_.asJson))
                   }
                 }
             }
