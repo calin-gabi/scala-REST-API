@@ -1,7 +1,7 @@
 package gabim.restapi.services
 
 import gabim.restapi.models._
-import gabim.restapi.models.db.{UserEntityTable, UsersProfileEntityTable}
+import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UsersProfileEntityTable}
 import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,7 +9,7 @@ import com.github.t3hnar.bcrypt._
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 
-class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable {
+class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable with  TokenEntityTable{
 
   import databaseService._
   import databaseService.driver.api._
@@ -20,9 +20,16 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def getUserByLogin(login: String): Future[Option[UserEntity]] = db.run(users.filter(_.username === login).result.headOption)
 
-  def getUserProfileByToken(username: String, token: TokenEntity): Future[Option[UserResponseEntity]] = db.run(usersProfiles
-    .filter(_.user_id === token.userId).result.headOption)
-    .map( row => Option(new UserResponseEntity(username, Option(token.token) , row)))
+  def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {
+    val q = for {
+      tk <- tokens if tk.token === token
+      (user, profile) <- users joinLeft usersProfiles on (_.id === _.user_id) if user.id === tk.userId
+    } yield (user, profile)
+    db.run(q.result.headOption).map{
+      case Some((user, profile)) => Option(UserResponseEntity(user.id.get, user.username, user.role.get, Option(token), profile))
+      case None => Option(UserResponseEntity(0, "anonymus", "", Option(""), None))
+    }
+  }
 
   def isAvailable(username: String): Future[String] = db.run(users.filter(_.username === username).result.headOption).map {
     case Some(user) => "false"
@@ -32,7 +39,7 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)
     println(user)
-    val dbUser: UserEntity = new UserEntity(None, user.username, hashPass, user.role.orElse(Option("user")), user.last_login,
+    val dbUser: UserEntity = UserEntity(None, user.username, hashPass, user.role.orElse(Option("user")), user.last_login,
       user.attempts.orElse(Option(0)), user.lockoutdate, user.twofactor.orElse(Option(false)),
       user.email, user.emailconfirmed.orElse(Option(false)), user.phone, user.phoneconfirmed.orElse(Option(false)),
       user.active.orElse(Option(true)), user.created.orElse(Option(new DateTime())), user.rev.orElse(Option(0)))
@@ -48,6 +55,6 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def deleteUser(id: Long): Future[Int] = db.run(users.filter(_.id === id).delete)
 
-  def canUpdateUsers(user: UserEntity) = user.role == Some("admin")
-  def canViewUsers(user: UserEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
+  def canUpdateUsers(user: UserResponseEntity) = user.role == "admin"
+  def canViewUsers(user: UserResponseEntity) = Seq("admin", "manager").contains(user.role)
 }
