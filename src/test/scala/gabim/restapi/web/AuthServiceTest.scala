@@ -3,7 +3,7 @@ package gabim.restapi.web
 import akka.http.scaladsl.model.{HttpEntity, MediaTypes, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server
-import gabim.restapi.models.{TokenEntity, UserEntity}
+import gabim.restapi.models.{TokenEntity, UserEntity, UserResponseEntity}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
@@ -31,8 +31,11 @@ class AuthServiceTest extends BaseServiceTest{
   }
 
   private def signInUser(user: UserEntity, clearpass: String, route: server.Route)(action: => Unit) = {
-    val credentials: BasicHttpCredentials = new BasicHttpCredentials(user.username, clearpass)
-    Post("/auth/signIn").addCredentials(credentials) ~> route ~> check(action)
+    val requestEntity = HttpEntity(
+      MediaTypes.`application/json`,
+      s"""{"username": "${user.username}", "password": "${clearpass}"}"""
+    )
+    Post("/auth/signIn", requestEntity) ~> route ~> check(action)
   }
 
   "Authentication service" should {
@@ -44,11 +47,12 @@ class AuthServiceTest extends BaseServiceTest{
       }
     }
 
-    "authenticate user and return token" in new Context {
+    "authenticate user and return user response {username, token, profile}" in new Context {
       val testUser = testUsers(1)
       val pass = passwords(1)
       signInUser(testUser, pass, route) {
-        responseAs[TokenEntity] should be
+        println(response)
+        responseAs[UserResponseEntity] should be
       }
     }
   }

@@ -38,7 +38,6 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password, generateSalt)
-    println(user)
     val dbUser: UserEntity = UserEntity(None, user.username, hashPass, user.role.orElse(Option("user")), user.last_login,
       user.attempts.orElse(Option(0)), user.lockoutdate, user.twofactor.orElse(Option(false)),
       user.email, user.emailconfirmed.orElse(Option(false)), user.phone, user.phoneconfirmed.orElse(Option(false)),
