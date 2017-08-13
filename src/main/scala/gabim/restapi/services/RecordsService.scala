@@ -34,6 +34,10 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
 
-  def canUpdateRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-  def canViewRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
+  def canUpdateRecords(user: UserResponseEntity, userId: Long) = {
+    Seq("admin", "manager").contains(user.role) || user.id == userId
+  }
+  def canViewRecords(user: UserResponseEntity, userId: Long) = {
+    Seq("admin", "manager").contains(user.role) || user.id == userId
+  }
 }

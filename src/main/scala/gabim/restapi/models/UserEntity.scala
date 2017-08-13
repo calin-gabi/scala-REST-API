@@ -62,3 +62,13 @@ case class UserEntityUpdate(
 case class UsernameAvailable(
                              username: String
                            )
+
+case class UserViewEntity (
+                            id: Option[Long] = None,
+                           username: String,
+                           role: Option[String],
+                           email: Option[String],
+                           phone: Option[String],
+                           active: Option[Boolean]) {
+
+}

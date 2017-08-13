@@ -56,18 +56,18 @@ class RecordsServiceRoute(val authService: AuthService,
     handleRejections(recordsRejectionHandler) {
       pathPrefix(LongNumber) { userId => {
         authenticate { loggedUser =>
-          (pathEndOrSingleSlash & authorize(recordsService canViewRecords loggedUser))  {
+          (pathEndOrSingleSlash & authorize(recordsService canViewRecords(loggedUser, userId)))  {
             get{
               complete(getRecordsByUserId(userId).map(_.asJson))
             } ~
-              (post & authorize(recordsService canUpdateRecords loggedUser)){
+              (post & authorize(recordsService canUpdateRecords(loggedUser, userId))){
                 entity(as[RecordEntity]) { newRecord =>
                   complete(createRecord(newRecord))
                 }
               }
             } ~
             pathPrefix(LongNumber) { recordId => {
-              (pathEndOrSingleSlash & authorize(recordsService canUpdateRecords loggedUser)){
+              (pathEndOrSingleSlash & authorize(recordsService canUpdateRecords(loggedUser, userId))){
                 post {
                   entity(as[RecordEntityUpdate]) { recordUpdate => {
                     complete(Created -> updateRecord(recordId, recordUpdate).map(_.asJson))
