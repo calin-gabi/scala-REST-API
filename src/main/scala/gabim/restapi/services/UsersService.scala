@@ -14,7 +14,13 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   import databaseService._
   import databaseService.driver.api._
 
-  def getUsers(): Future[Seq[UserEntity]] = db.run(users.result)
+  def getUsers(): Future[Seq[UserViewEntity]] = db.run(users
+    .map(
+      user => (user.id, user.username, user.role, user.email, user.phone, user.active)
+    ).result.map(
+      _.map( u => UserViewEntity(u._1, u._2, u._3, u._4, u._5, u._6))
+    )
+  )
 
   def getUserById(id: Long): Future[Option[UserEntity]] = db.run(users.filter(_.id === id).result.headOption)
 
@@ -23,12 +29,13 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {
     val q = for {
       tk <- tokens if tk.token === token
-      (user, profile) <- users joinLeft usersProfiles on (_.id === _.user_id) if user.id === tk.userId
+      (user, profile) <- users joinLeft usersProfiles on (_.id === _.userId) if user.id === tk.userId
     } yield (user, profile)
-    db.run(q.result.headOption).map{
-      case Some((user, profile)) => Option(UserResponseEntity(user.id.get, user.username, user.role.get, Option(token), profile))
-      case None => Option(UserResponseEntity(0, "anonymus", "", Option(""), None))
-    }
+    db.run(q.result.headOption)
+      .map{
+        case Some((user, profile)) => Option(UserResponseEntity(user.id.get, user.username, user.role.get, Option(token), profile))
+        case None => Option(UserResponseEntity(0, "anonymus", "", Option(""), None))
+      }
   }
 
   def isAvailable(username: String): Future[String] = db.run(users.filter(_.username === username).result.headOption).map {
@@ -45,10 +52,11 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
     db.run(users returning users += dbUser)
   }
 
-  def updateUser(id: Long, userUpdate: UserEntityUpdate): Future[Option[UserEntity]] = getUserById(id).flatMap {
+  def updateUser(id: Long, userUpdate: UserEntityUpdate): Future[Option[UserViewEntity]] = getUserById(id).flatMap {
     case Some(user) =>
       val updatedUser = userUpdate.merge(user)
-      db.run(users.filter(_.id === id).update(updatedUser)).map(_ => Some(updatedUser))
+      db.run(users.filter(_.id === id).update(updatedUser)).map(_ =>
+        Some(UserViewEntity(updatedUser.id, updatedUser.username, updatedUser.role, updatedUser.email, updatedUser.phone, updatedUser.active)))
     case None => Future.successful(None)
   }
 

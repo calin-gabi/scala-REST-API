@@ -28,6 +28,7 @@ libraryDependencies ++= {
 
     "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperVersion,
     "joda-time" % "joda-time" % "2.7",
+    "com.github.nscala-time" %% "nscala-time" % "2.16.0",
     "org.joda" % "joda-convert" % "1.7",
 
     "com.zaxxer" % "HikariCP" % "2.4.5",
@@ -43,6 +44,8 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-testkit" % akkaV % "test",
     "ru.yandex.qatools.embed" % "postgresql-embedded" % "1.15" % "test",
 
+    "com.google.api-client" % "google-api-client" % "1.22.0",
+    "com.google.apis" % "google-api-services-oauth2" % "v2-rev129-1.22.0",
 
     "com.typesafe.akka" %% "akka-actor" % "2.4.17",
     "com.typesafe.akka" %% "akka-cluster" % "2.4.17",
@@ -59,20 +62,20 @@ libraryDependencies ++= {
 // Create custom run tasks to start a seed and a cluster node
 // http://www.scala-sbt.org/0.13.0/docs/faq.html#how-can-i-create-a-custom-run-task-in-addition-to-run
 /*
-lazy val runSeed = taskKey[Unit]("Start the seed node on 127.0.0.1:2551")
-fullRunTask(runSeed, Compile, "gabim.restapi.Main", "--seed")
-fork in runSeed := true
-
-javaOptions in runSeed ++= Seq(
-  "-Dclustering.ip=127.0.0.1",
-  "-Dclustering.port=2551"
-)
-
-lazy val runNode = taskKey[Unit]("Start a node on 127.0.0.1:2552")
-fullRunTask(runNode, Compile, "gabim.restapi.Main", "127.0.0.1:2551")
-fork in runNode := true
-
-javaOptions in runNode ++= Seq(
-  "-Dclustering.ip=127.0.0.1",
-  "-Dclustering.port=2552"
-)*/
+//lazy val runSeed = taskKey[Unit]("Start the seed node on 127.0.0.1:2551")
+//fullRunTask(runSeed, Compile, "gabim.restapi.Main", "--seed")
+//fork in runSeed := true
+//
+//javaOptions in runSeed ++= Seq(
+//  "-Dclustering.ip=127.0.0.1",
+//  "-Dclustering.port=2551"
+//)
+//
+//lazy val runNode = taskKey[Unit]("Start a node on 127.0.0.1:2552")
+//fullRunTask(runNode, Compile, "gabim.restapi.Main", "127.0.0.1:2551")
+//fork in runNode := true
+//
+//javaOptions in runNode ++= Seq(
+//  "-Dclustering.ip=127.0.0.1",
+//  "-Dclustering.port=2552"
+//)*/

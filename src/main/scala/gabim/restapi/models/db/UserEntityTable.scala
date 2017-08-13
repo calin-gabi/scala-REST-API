@@ -1,6 +1,6 @@
 package gabim.restapi.models.db
 
-import gabim.restapi.models.UserEntity
+import gabim.restapi.models.{UserEntity, UserViewEntity}
 import gabim.restapi.utilities.DatabaseService
 import slick.driver.PostgresDriver.api._
 import org.joda.time.DateTime
@@ -29,8 +29,13 @@ trait UserEntityTable {
     def rev = column[Option[Long]]("rev")
 
     def * = (id, username, password, role, last_login, attempts, lockoutdate, twoFactor, email, emailconfirmed, phone, phoneconfirmed, active, created, rev) <> ((UserEntity.apply _).tupled, UserEntity.unapply)
+
+//    def record = (id, username, role, email, phone, active) <> ((UserViewEntity.apply _).tupled, UserViewEntity.unapply)
+
   }
 
   protected val users = TableQuery[Users]
+
+//  protected val usersView = TableQuery[Users]
 
 }

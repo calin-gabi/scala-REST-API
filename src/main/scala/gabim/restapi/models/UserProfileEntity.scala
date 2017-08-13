@@ -1,7 +1,7 @@
 package gabim.restapi.models
 
 case class UserProfileEntity(
-                            user_id: Long,
+                            userId: Long,
                             first_name: Option[String],
                             last_name: Option[String],
                             picture_url: Option[String]
@@ -15,7 +15,7 @@ case class UserProfileEntityUpdate(
 
   def merge(userProfile: UserProfileEntity): UserProfileEntity = {
     UserProfileEntity(
-      userProfile.user_id,
+      userProfile.userId,
       first_name.orElse(userProfile.first_name),
       last_name.orElse(userProfile.last_name),
       picture_url.orElse(userProfile.picture_url)

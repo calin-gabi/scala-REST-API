@@ -1,8 +1,12 @@
 package gabim.restapi.services
 
+import java.sql.{Date, Timestamp}
+
 import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity, UserResponseEntity}
 import gabim.restapi.models.db.RecordEntityTable
 import gabim.restapi.utilities.DatabaseService
+import com.github.nscala_time.time.OrderingImplicits._
+import org.joda.time.DateTime
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,11 +19,16 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     db.run(records.filter(_.id === id).result.headOption)
   }
 
-  def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] = db.run(records.filter(_.userId === id).result)
+  implicit val dateTimeColumnType = MappedColumnType.base[DateTime, Timestamp](
+    d => new Timestamp(d.getMillis),
+    d => new DateTime(d.getTime())
+  )
+
+  def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] =  db.run(records.filter(_.userId === id).sortBy(_.date.desc.nullsFirst).result)
 
   def createRecord(record: RecordEntity) : Future[RecordEntity] = {
     val newRecord: RecordEntity = RecordEntity(None, record.userId, record.date, record.description,
-      record.amount, record.comment, 0)
+      record.amount, record.comment, Option(0))
     db.run(records returning records += newRecord)
   }
 
@@ -27,13 +36,19 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     getRecordById(id).flatMap{
       case Some(record) =>
         val updatedRecord = recordUpdate.merge(record)
-        db.run(records.filter(_.id === id).result.headOption)
+        db.run(records.filter(_.id === id).update(updatedRecord)).map(_ => Some(updatedRecord))
       case None => Future.successful(None)
     }
   }
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
 
-  def canUpdateRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager")).contains(user.role)
-  def canViewRecords(user: UserResponseEntity) = Seq(Some("admin"), Some("manager"), Some("user")).contains(user.role)
+  def filterRecord(userId: Long, startDate: DateTime, endDate: DateTime): Future[Seq[RecordEntity]] = db.run(records.filter(r => (r.userId === userId && r.date > startDate && r.date < endDate) ).sortBy(_.date.desc.nullsFirst).result)
+
+  def canUpdateRecords(user: UserResponseEntity, userId: Long) = {
+    Seq("admin", "manager").contains(user.role) || user.id == userId
+  }
+  def canViewRecords(user: UserResponseEntity, userId: Long) = {
+    Seq("admin", "manager").contains(user.role) || user.id == userId
+  }
 }

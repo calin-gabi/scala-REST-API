@@ -51,7 +51,6 @@ class AuthServiceTest extends BaseServiceTest{
       val testUser = testUsers(1)
       val pass = passwords(1)
       signInUser(testUser, pass, route) {
-        println(response)
         responseAs[UserResponseEntity] should be
       }
     }

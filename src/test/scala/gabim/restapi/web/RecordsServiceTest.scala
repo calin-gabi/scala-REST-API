@@ -45,51 +45,51 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
   def jsonPrinter[A: Encoder](obj: A): String = obj.asJson.noSpaces
 
-//  "The records service " should {
-//
-//    "on get: return records of selected user" in new managerContext {
-//      val testUser = testUsers(0)
-//      val userId = testUser.id.get
-//      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
-//      val url = s"/records/${userId}"
-//      Get(url) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
-//        response.status should be(StatusCodes.OK)
-//      }
-//    }
-//
-//    "on post: insert a new record for a selected user" in new managerContext {
-//      val testUser = testUsers(0)
-//      val userId = testUser.id.get
-//      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
-//      var record: RecordEntity = testRecords.find(_.userId == userId).get
-//      val requestEntity = HttpEntity(MediaTypes.`application/json`, record.asJson.noSpaces)
-//      val url = s"/records/${userId}"
-//      Post(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
-//        response.status should be(StatusCodes.OK)
-//      }
-//    }
-//
-//    "on post: update a record for a selected user" in new managerContext {
-//      val testUser = testUsers(0)
-//      val userId = testUser.id.get
-//      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
-//      var recordId: Long = testRecords.find(_.userId == userId).get.id.get
-//      val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": "999"}""")
-//      val url = s"/records/${userId}/${recordId}"
-//      Post(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
-//        response.status should be(StatusCodes.CREATED)
-//      }
-//    }
-//
-//    "on delete: delete a record for a selected user" in new managerContext {
-//      val testUser = testUsers(0)
-//      val userId = testUser.id.get
-//      val authorization = "Token" -> testTokens.find(_.userId.contains(userId)).get.token
-//      var recordId: Long = testRecords.find(_.userId == userId).get.id.get
-//      val url = s"/records/${userId}/${recordId}"
-//      Delete(url, recordId) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
-//        response.status should be(StatusCodes.ACCEPTED)
-//      }
-//    }
-//  }
+  "The records service " should {
+
+    "on get: return records of selected user" in new managerContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val url = s"/records/${userId}"
+      Get(url) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(StatusCodes.OK)
+      }
+    }
+
+    "on post: insert a new record for a selected user" in new managerContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      var record: RecordEntity = testRecords.find(_.userId == userId).get
+      val requestEntity = HttpEntity(MediaTypes.`application/json`, record.asJson.noSpaces)
+      val url = s"/records/${userId}"
+      Post(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(StatusCodes.OK)
+      }
+    }
+
+    "on post: update a record for a selected user" in new managerContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      var recordId: Long = testRecords.find(_.userId == userId).get.id.get
+      val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": "999"}""")
+      val url = s"/records/${userId}/${recordId}"
+      Post(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(StatusCodes.CREATED)
+      }
+    }
+
+    "on delete: delete a record for a selected user" in new managerContext {
+      val testUser = testUsers(0)
+      val userId = testUser.id.get
+      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      var recordId: Long = testRecords.find(_.userId == userId).get.id.get
+      val url = s"/records/${userId}/${recordId}"
+      Delete(url, recordId) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+        response.status should be(StatusCodes.ACCEPTED)
+      }
+    }
+  }
 }
