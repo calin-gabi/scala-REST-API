@@ -62,6 +62,7 @@ class RecordsServiceRoute(val authService: AuthService,
             } ~
               (post & authorize(recordsService canUpdateRecords(loggedUser, userId))){
                 entity(as[RecordEntity]) { newRecord =>
+                  println("post")
                   complete(createRecord(newRecord))
                 }
               }

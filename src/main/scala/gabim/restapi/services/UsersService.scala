@@ -52,10 +52,11 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
     db.run(users returning users += dbUser)
   }
 
-  def updateUser(id: Long, userUpdate: UserEntityUpdate): Future[Option[UserEntity]] = getUserById(id).flatMap {
+  def updateUser(id: Long, userUpdate: UserEntityUpdate): Future[Option[UserViewEntity]] = getUserById(id).flatMap {
     case Some(user) =>
       val updatedUser = userUpdate.merge(user)
-      db.run(users.filter(_.id === id).update(updatedUser)).map(_ => Some(updatedUser))
+      db.run(users.filter(_.id === id).update(updatedUser)).map(_ =>
+        Some(UserViewEntity(updatedUser.id, updatedUser.username, updatedUser.role, updatedUser.email, updatedUser.phone, updatedUser.active)))
     case None => Future.successful(None)
   }
 

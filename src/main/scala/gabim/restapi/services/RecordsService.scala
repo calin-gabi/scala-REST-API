@@ -18,8 +18,10 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] = db.run(records.filter(_.userId === id).result)
 
   def createRecord(record: RecordEntity) : Future[RecordEntity] = {
+    println(record)
     val newRecord: RecordEntity = RecordEntity(None, record.userId, record.date, record.description,
       record.amount, record.comment, 0)
+    println(newRecord)
     db.run(records returning records += newRecord)
   }
 
@@ -27,7 +29,8 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     getRecordById(id).flatMap{
       case Some(record) =>
         val updatedRecord = recordUpdate.merge(record)
-        db.run(records.filter(_.id === id).result.headOption)
+        println(updatedRecord)
+        db.run(records.filter(_.id === id).update(updatedRecord)).map(_ => Some(updatedRecord))
       case None => Future.successful(None)
     }
   }
