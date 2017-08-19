@@ -1,6 +1,6 @@
 package gabim.restapi.services
 
-import java.sql.Date
+import java.sql.{Date, Timestamp}
 
 import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity, UserResponseEntity}
 import gabim.restapi.models.db.RecordEntityTable
@@ -19,9 +19,9 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     db.run(records.filter(_.id === id).result.headOption)
   }
 
-  implicit val dateTimeColumnType = MappedColumnType.base[DateTime, Date](
-    d => Date.valueOf(d.toString("yyyy-MM-dd HH:mm")),
-    d => new DateTime(d.toLocalDate())
+  implicit val dateTimeColumnType = MappedColumnType.base[DateTime, Timestamp](
+    d => new Timestamp(d.getMillis),
+    d => new DateTime(d.getTime())
   )
 
   def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] =  db.run(records.filter(_.userId === id).sortBy(_.date.desc.nullsFirst).result)
@@ -42,6 +42,8 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   }
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
+
+  def filterRecord(userId: Long, startDate: DateTime, endDate: DateTime): Future[Seq[RecordEntity]] = db.run(records.filter(r => (r.userId === userId && r.date > startDate && r.date < endDate) ).sortBy(_.date.desc.nullsFirst).result)
 
   def canUpdateRecords(user: UserResponseEntity, userId: Long) = {
     Seq("admin", "manager").contains(user.role) || user.id == userId

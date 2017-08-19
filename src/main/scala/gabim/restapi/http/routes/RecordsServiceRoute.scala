@@ -62,7 +62,6 @@ class RecordsServiceRoute(val authService: AuthService,
             } ~
               (post & authorize(recordsService canUpdateRecords(loggedUser, userId))){
                 entity(as[RecordEntity]) { newRecord =>
-                  println("post")
                   complete(createRecord(newRecord))
                 }
               }
@@ -82,10 +81,19 @@ class RecordsServiceRoute(val authService: AuthService,
                   }
                 }
               }
+            } ~
+            pathPrefix("filter") {
+              post {
+                entity(as[FilterRecordsEntity]) { filterRecordsEntity =>
+                  complete(filterRecord(userId, filterRecordsEntity.startDate, filterRecordsEntity.endDate).map(_.asJson))
+                }
+              }
             }
           }
         }
       }
     }
   }
+
+  private case class FilterRecordsEntity(startDate: DateTime, endDate: DateTime)
 }
