@@ -29,7 +29,7 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {
     val q = for {
       tk <- tokens if tk.token === token
-      (user, profile) <- users joinLeft usersProfiles on (_.id === _.user_id) if user.id === tk.userId
+      (user, profile) <- users joinLeft usersProfiles on (_.id === _.userId) if user.id === tk.userId
     } yield (user, profile)
     db.run(q.result.headOption)
       .map{

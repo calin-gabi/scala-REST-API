@@ -53,7 +53,7 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
 
   def provisionRecordsList(usersList: Seq[UserEntity]) = {
     val savedRecords = usersList.map { user =>
-      val record = RecordEntity(Some(Random.nextInt()), user.id.get, new DateTime(), RandomString(20), 2, Option(RandomString(30)), 1)
+      val record = RecordEntity(Some(Random.nextInt()), user.id.get, Option(new DateTime()), RandomString(20), 2, Option(RandomString(30)), Option(1))
       record
     }.map(recordsService.createRecord)
 

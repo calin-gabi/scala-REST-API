@@ -28,6 +28,7 @@ libraryDependencies ++= {
 
     "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperVersion,
     "joda-time" % "joda-time" % "2.7",
+    "com.github.nscala-time" %% "nscala-time" % "2.16.0",
     "org.joda" % "joda-convert" % "1.7",
 
     "com.zaxxer" % "HikariCP" % "2.4.5",

@@ -1,8 +1,12 @@
 package gabim.restapi.services
 
+import java.sql.Date
+
 import gabim.restapi.models.{RecordEntity, RecordEntityUpdate, UserEntity, UserResponseEntity}
 import gabim.restapi.models.db.RecordEntityTable
 import gabim.restapi.utilities.DatabaseService
+import com.github.nscala_time.time.OrderingImplicits._
+import org.joda.time.DateTime
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,13 +19,16 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     db.run(records.filter(_.id === id).result.headOption)
   }
 
-  def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] = db.run(records.filter(_.userId === id).result)
+  implicit val dateTimeColumnType = MappedColumnType.base[DateTime, Date](
+    d => Date.valueOf(d.toString("yyyy-MM-dd HH:mm")),
+    d => new DateTime(d.toLocalDate())
+  )
+
+  def getRecordsByUserId(id: Long) : Future[Seq[RecordEntity]] =  db.run(records.filter(_.userId === id).sortBy(_.date.desc.nullsFirst).result)
 
   def createRecord(record: RecordEntity) : Future[RecordEntity] = {
-    println(record)
     val newRecord: RecordEntity = RecordEntity(None, record.userId, record.date, record.description,
-      record.amount, record.comment, 0)
-    println(newRecord)
+      record.amount, record.comment, Option(0))
     db.run(records returning records += newRecord)
   }
 
@@ -29,7 +36,6 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
     getRecordById(id).flatMap{
       case Some(record) =>
         val updatedRecord = recordUpdate.merge(record)
-        println(updatedRecord)
         db.run(records.filter(_.id === id).update(updatedRecord)).map(_ => Some(updatedRecord))
       case None => Future.successful(None)
     }
