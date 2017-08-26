@@ -2,9 +2,10 @@ package gabim.restapi.web
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import de.heikoseeberger.akkahttpcirce.CirceSupport
+import gabim.restapi.Main.{databaseService, usersService}
 import gabim.restapi.http.HttpService
 import gabim.restapi.models.{RecordEntity, UserEntity}
-import gabim.restapi.services.{AuthService, RecordsService, UsersService}
+import gabim.restapi.services.{AuthService, OAuthService, RecordsService, UsersService}
 import gabim.restapi.utilities.DatabaseService
 import org.scalatest._
 import gabim.restapi.web.utils.InMemoryPostgresStorage._
@@ -24,8 +25,9 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
 
   val usersService = new UsersService(databaseService)
   val authService = new AuthService(databaseService)(usersService)
+  val oauthService = new OAuthService(databaseService)(usersService)
   val recordsService = new RecordsService(databaseService)
-  val httpService = new HttpService(usersService, recordsService, authService)
+  val httpService = new HttpService(usersService, recordsService, authService, oauthService)
 
   def RandomString(size: Int): String = {
     val pass = Random.alphanumeric.take(10)
