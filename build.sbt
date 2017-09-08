@@ -48,34 +48,13 @@ libraryDependencies ++= {
     "com.google.apis" % "google-api-services-oauth2" % "v2-rev129-1.22.0",
 
     "com.typesafe.akka" %% "akka-actor" % "2.4.17",
-    "com.typesafe.akka" %% "akka-cluster" % "2.4.17",
+    // "com.typesafe.akka" %% "akka-cluster" % "2.4.17",
     "com.github.scopt" %% "scopt" % "3.6.0"
   )
 }
 
-//Revolver.settings
-//enablePlugins(DockerPlugin)
+Revolver.settings
+enablePlugins(DockerPlugin)
 
 //dockerExposedPorts := Seq(9000)
 //dockerEntrypoint := Seq("bin/%s" format executableScriptName.value, "-Dconfig.resource=docker.conf")
-
-// Create custom run tasks to start a seed and a cluster node
-// http://www.scala-sbt.org/0.13.0/docs/faq.html#how-can-i-create-a-custom-run-task-in-addition-to-run
-/*
-//lazy val runSeed = taskKey[Unit]("Start the seed node on 127.0.0.1:2551")
-//fullRunTask(runSeed, Compile, "gabim.restapi.Main", "--seed")
-//fork in runSeed := true
-//
-//javaOptions in runSeed ++= Seq(
-//  "-Dclustering.ip=127.0.0.1",
-//  "-Dclustering.port=2551"
-//)
-//
-//lazy val runNode = taskKey[Unit]("Start a node on 127.0.0.1:2552")
-//fullRunTask(runNode, Compile, "gabim.restapi.Main", "127.0.0.1:2551")
-//fork in runNode := true
-//
-//javaOptions in runNode ++= Seq(
-//  "-Dclustering.ip=127.0.0.1",
-//  "-Dclustering.port=2552"
-//)*/

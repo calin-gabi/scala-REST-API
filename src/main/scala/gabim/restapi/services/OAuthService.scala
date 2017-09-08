@@ -5,10 +5,10 @@ import java.util
 
 import com.fasterxml.jackson.core.JsonFactory
 import com.google.api.client.googleapis.apache.GoogleApacheHttpTransport
-import gabim.restapi.models.db.TokenEntityTable
+import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UserOAuthEntityTable}
 import gabim.restapi.utilities.DatabaseService
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext, Future}
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.client.googleapis.auth.oauth2._
@@ -21,8 +21,15 @@ import java.io.InputStreamReader
 
 import com.google.api.client.auth.oauth2.{BearerToken, Credential, TokenResponse}
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer
+import gabim.restapi.models.{OAuthToken, UserEntity, UserOAuthEntity, UserResponseEntity}
+import org.joda.time.DateTime
 
-class OAuthService(val databaseService: DatabaseService)(usersService: UsersService)(implicit executionContext: ExecutionContext) extends TokenEntityTable {
+import scala.concurrent.duration._
+
+class OAuthService(val databaseService: DatabaseService)(usersService: UsersService, authService: AuthService)(implicit executionContext: ExecutionContext) extends UserOAuthEntityTable {
+
+  import databaseService._
+  import databaseService.driver.api._
 
   val clientIDList: util.Collection[String] = util.Arrays.asList("252899479655-aclf4njds8994sqe9q5trh7d5p5hivio.apps.googleusercontent.com")
   val scopes: util.Collection[String] = util.Arrays.asList("profile", "email")
@@ -55,8 +62,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     }
   }
 
-  def tokenInfo(accessToken: String): Boolean = {
-    println(accessToken)
+  def tokenInfo(accessToken: String): Tokeninfo = {
     val credential = new GoogleCredential.Builder()
         .setTransport(transport)
         .setJsonFactory(JSON_FACTORY)
@@ -68,7 +74,45 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     val _tokenInfo = oauth2.tokeninfo()
       .setAccessToken(credential.getAccessToken())
       .execute()
-    println(_tokenInfo)
-    true
+    _tokenInfo
+  }
+
+  def createUserOAuth(userOAuth: UserOAuthEntity): Future[UserOAuthEntity] = {
+    db.run(usersOauth returning usersOauth += userOAuth)
+  }
+
+  def loginOAuth(userOAuth: UserOAuthEntity): Future[Option[UserResponseEntity]] = {
+    usersService.getUserByOAuth(userOAuth).flatMap { user =>
+      authService.createToken(user.get)
+    }
+  }
+
+  def signUpGoogle(token: String): Future[Option[UserResponseEntity]] = {
+    val tokeninfo = tokenInfo(token)
+    val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
+      Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
+    val newDbUser: Future[UserEntity] = usersService.createUser(newUser)
+    newDbUser.flatMap( userEntity => {
+      val newUserOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
+      createUserOAuth(newUserOAuth)
+    }).flatMap(userOAuthEntity => loginOAuth(userOAuthEntity))
+  }
+
+  def loginGoogle(token: String): UserResponseEntity = {
+    null
+  }
+
+  def signUpOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+    oauthToken.oauthType match {
+      case "google" => signUpGoogle(oauthToken.token)
+      case whoa => null
+    }
+  }
+
+  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+    oauthToken.oauthType match {
+      case "google" => Future {Option(loginGoogle(oauthToken.token))}
+      case whoa => null
+    }
   }
 }

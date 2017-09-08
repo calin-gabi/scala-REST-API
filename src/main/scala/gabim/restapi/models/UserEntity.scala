@@ -7,7 +7,7 @@ import com.github.tototoshi.slick.PostgresJodaSupport._
 case class UserEntity(
                        id: Option[Long] = None,
                        username: String,
-                       password: String,
+                       password: Option[String],
                        role: Option[String],
                        last_login: Option[DateTime],
                        attempts: Option[Int],
@@ -43,7 +43,7 @@ case class UserEntityUpdate(
     UserEntity(
       user.id,
       username.getOrElse(user.username),
-      password.getOrElse(user.password),
+      password.orElse(user.password),
       role.orElse(user.role),
       last_login.orElse(user.last_login),
       attempts.orElse(user.attempts),

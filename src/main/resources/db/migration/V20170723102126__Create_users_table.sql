@@ -1,7 +1,7 @@
 CREATE TABLE users (
   id       BIGSERIAL PRIMARY KEY,
   username VARCHAR NOT NULL,
-  password VARCHAR NOT NULL,
+  password VARCHAR,
   role VARCHAR (200),
   last_login TIMESTAMP,
   attempts INT DEFAULT 0,

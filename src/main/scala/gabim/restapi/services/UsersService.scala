@@ -1,7 +1,7 @@
 package gabim.restapi.services
 
 import gabim.restapi.models._
-import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UsersProfileEntityTable}
+import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UserOAuthEntityTable, UsersProfileEntityTable}
 import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,7 +9,7 @@ import com.github.t3hnar.bcrypt._
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 
-class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable with  TokenEntityTable{
+class UsersService(val databaseService: DatabaseService)(implicit executionContext: ExecutionContext) extends UserEntityTable with UsersProfileEntityTable with UserOAuthEntityTable with TokenEntityTable{
 
   import databaseService._
   import databaseService.driver.api._
@@ -25,6 +25,14 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   def getUserById(id: Long): Future[Option[UserEntity]] = db.run(users.filter(_.id === id).result.headOption)
 
   def getUserByLogin(login: String): Future[Option[UserEntity]] = db.run(users.filter(_.username === login).result.headOption)
+
+  def getUserByOAuth(oauth: UserOAuthEntity): Future[Option[UserEntity]] = {
+    val q = for {
+      userO <- usersOauth filter(_.oauthId === oauth.oauthId) filter(_.oauthType === oauth.oauthType)
+      user <- users filter(_.id === userO.userId)
+    } yield (user)
+    db.run(q.result.headOption)
+  }
 
   def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {
     val q = for {
@@ -44,8 +52,8 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   }
 
   def createUser(user: UserEntity): Future[UserEntity] = {
-    val hashPass = BCrypt.hashpw(user.password, generateSalt)
-    val dbUser: UserEntity = UserEntity(None, user.username, hashPass, user.role.orElse(Option("user")), user.last_login,
+    val hashPass = BCrypt.hashpw(user.password.get, generateSalt)
+    val dbUser: UserEntity = UserEntity(None, user.username, Option(hashPass), user.role.orElse(Option("user")), user.last_login,
       user.attempts.orElse(Option(0)), user.lockoutdate, user.twofactor.orElse(Option(false)),
       user.email, user.emailconfirmed.orElse(Option(false)), user.phone, user.phoneconfirmed.orElse(Option(false)),
       user.active.orElse(Option(true)), user.created.orElse(Option(new DateTime())), user.rev.orElse(Option(0)))
