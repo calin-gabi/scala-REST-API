@@ -20,4 +20,4 @@ case class UserOAuthEntityUpdate(
   }
 }
 
-case class OAuthToken(token: String, oauthType: String)
+case class OAuthToken(idToken: String, accessToken: String, oauthType: String)

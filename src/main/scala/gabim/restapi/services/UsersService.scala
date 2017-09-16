@@ -26,12 +26,17 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def getUserByLogin(login: String): Future[Option[UserEntity]] = db.run(users.filter(_.username === login).result.headOption)
 
-  def getUserByOAuth(oauth: UserOAuthEntity): Future[Option[UserEntity]] = {
+  def getUserByOAuth(userId: String, oauthType: String): Future[Option[UserEntity]] = {
     val q = for {
-      userO <- usersOauth filter(_.oauthId === oauth.oauthId) filter(_.oauthType === oauth.oauthType)
-      user <- users filter(_.id === userO.userId)
+      userO <- usersOauth filter(_.oauthId === userId) filter(_.oauthType === oauthType)
+      user <- users if user.id === userO.userId
     } yield (user)
     db.run(q.result.headOption)
+//    .map {
+//      case Some(user) => user
+//      case None => UserEntity(None, "anonymus", Option(""), Option("user"), None,
+//        None, None, None, None, None, None, None, None, None, None)
+//    }
   }
 
   def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {

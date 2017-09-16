@@ -81,21 +81,25 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     db.run(usersOauth returning usersOauth += userOAuth)
   }
 
-  def loginOAuth(userOAuth: UserOAuthEntity): Future[Option[UserResponseEntity]] = {
-    usersService.getUserByOAuth(userOAuth).flatMap { user =>
-      authService.createToken(user.get)
-    }
+  def loginOAuth(userOAuth: OAuthToken): Future[Option[UserResponseEntity]] = {
+    val _tokenInfo = tokenInfo(userOAuth.accessToken)
+    val _oauthUser = usersService.getUserByOAuth(_tokenInfo.getUserId(), userOAuth.oauthType)
+      _oauthUser.flatMap(user => user match {
+        case None => signUpGoogle(userOAuth)
+        case whoa => authService.createToken(user.get)
+      })
   }
 
-  def signUpGoogle(token: String): Future[Option[UserResponseEntity]] = {
-    val tokeninfo = tokenInfo(token)
+  def signUpGoogle(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+    val tokeninfo = tokenInfo(oauthToken.accessToken)
     val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
       Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
     val newDbUser: Future[UserEntity] = usersService.createUser(newUser)
     newDbUser.flatMap( userEntity => {
       val newUserOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
       createUserOAuth(newUserOAuth)
-    }).flatMap(userOAuthEntity => loginOAuth(userOAuthEntity))
+      authService.createToken(userEntity)
+    })
   }
 
   def loginGoogle(token: String): UserResponseEntity = {
@@ -104,15 +108,15 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
 
   def signUpOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
     oauthToken.oauthType match {
-      case "google" => signUpGoogle(oauthToken.token)
+      case "google" => signUpGoogle(oauthToken)
       case whoa => null
     }
   }
 
-  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
-    oauthToken.oauthType match {
-      case "google" => Future {Option(loginGoogle(oauthToken.token))}
-      case whoa => null
-    }
-  }
+//  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+//    oauthToken.oauthType match {
+//      case "google" => Future {Option(loginGoogle(oauthToken))}
+//      case whoa => null
+//    }
+//  }
 }

@@ -28,44 +28,46 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
 
   val route =
     pathPrefix("oauth") {
-      path("register") {
-        pathEndOrSingleSlash {
-          post {
-            entity(as[OAuthToken]) { oauthToken =>
-              complete(Created -> signUpOAuth(oauthToken).map(_.asJson))
-            }
-          }
-        }
-      } ~
+//      path("register") {
+//        pathEndOrSingleSlash {
+//          post {
+//            entity(as[OAuthToken]) { oauthToken =>
+//              complete(Created -> signUpOAuth(oauthToken).map(_.asJson))
+//            }
+//          }
+//        }
+//      } ~
         path("login") {
           pathEndOrSingleSlash {
             post {
-              entity(as[OAuthToken]) { oauthToken =>
-                complete(Created -> loginOAuth(oauthToken).map(_.asJson))
+              entity(as[OAuthToken]) { oauthToken => oauthToken.oauthType match {
+                  case "google" => complete(Created -> loginOAuth(oauthToken).map(_.asJson))
+                  case whoa => complete(NoContent)
+                }
               }
             }
           }
-        } ~
-      path("verify") {
-        pathEndOrSingleSlash {
-          post {
-            entity(as[OAuthToken]) { oauthToken =>
-              verifyIdToken(oauthToken.token)
-              complete(NoContent)
-            }
-          }
-        }
-      } ~
-        path("tokeninfo") {
-          pathEndOrSingleSlash {
-            post {
-              entity(as[OAuthToken]) { oauthToken =>
-                tokenInfo(oauthToken.token)
-                complete(NoContent)
-              }
-            }
-          }
-        }
+        } // ~
+//      path("verify") {
+//        pathEndOrSingleSlash {
+//          post {
+//            entity(as[OAuthToken]) { oauthToken =>
+//              verifyIdToken(oauthToken.token)
+//              complete(NoContent)
+//            }
+//          }
+//        }
+//      } ~
+//        path("tokeninfo") {
+//          pathEndOrSingleSlash {
+//            post {
+//              entity(as[OAuthToken]) { oauthToken =>
+//                tokenInfo(oauthToken.token)
+//                complete(NoContent)
+//              }
+//            }
+//          }
+//        }
     }
 
 }

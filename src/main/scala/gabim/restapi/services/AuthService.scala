@@ -14,7 +14,9 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   def signIn(login: String, password: String): Future[Option[UserResponseEntity]] = {
     db.run(users.filter(u => u.username === login).result).flatMap { users =>
-      users.find(user => BCrypt.checkpw(password, user.password.get)) match {
+      users.find(user =>
+        BCrypt.checkpw(password, user.password.get)
+      ) match {
         case Some(user) => db.run(tokens.filter(_.userId === user.id).result.headOption).flatMap {
           case Some(token) => {
             usersService.getUserProfileByToken(token.token)
