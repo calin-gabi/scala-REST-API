@@ -67,8 +67,10 @@ class RecordsServiceRoute(val authService: AuthService,
               }
             } ~
             pathPrefix(LongNumber) { recordId => {
+              println(loggedUser )
+              println(userId )
               (pathEndOrSingleSlash & authorize(recordsService canUpdateRecords(loggedUser, userId))){
-                post {
+                patch {
                   entity(as[RecordEntityUpdate]) { recordUpdate => {
                     complete(Created -> updateRecord(recordId, recordUpdate).map(_.asJson))
                   }
