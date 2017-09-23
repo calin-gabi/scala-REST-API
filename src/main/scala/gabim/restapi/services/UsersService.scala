@@ -32,11 +32,6 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
       user <- users if user.id === userO.userId
     } yield (user)
     db.run(q.result.headOption)
-//    .map {
-//      case Some(user) => user
-//      case None => UserEntity(None, "anonymus", Option(""), Option("user"), None,
-//        None, None, None, None, None, None, None, None, None, None)
-//    }
   }
 
   def getUserProfileByToken(token: String): Future[Option[UserResponseEntity]] = {
