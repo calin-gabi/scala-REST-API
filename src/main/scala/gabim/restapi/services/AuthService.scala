@@ -4,7 +4,8 @@ import gabim.restapi.models._
 import gabim.restapi.models.db.TokenEntityTable
 import gabim.restapi.utilities.DatabaseService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 import org.mindrot.jbcrypt.BCrypt
 
 class AuthService(val databaseService: DatabaseService)(usersService: UsersService)(implicit executionContext: ExecutionContext) extends TokenEntityTable {
@@ -41,7 +42,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   def createToken(user: UserEntity): Future[Option[UserResponseEntity]] = {
     val token_ = TokenEntity(userId = user.id)
-    db.run(tokens returning tokens += token_)
+    val createdToken = db.run(tokens returning tokens += token_)
     usersService.getUserProfileByToken(token_.token)
   }
 

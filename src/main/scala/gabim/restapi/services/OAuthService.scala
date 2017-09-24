@@ -37,10 +37,18 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
   val transport: HttpTransport = GoogleApacheHttpTransport.newTrustedTransport();
   val JSON_FACTORY = JacksonFactory.getDefaultInstance()
   val clientSecrets: GoogleClientSecrets = loadGoogleCredentials()
+  val credential = new GoogleCredential.Builder()
+    .setTransport(transport)
+    .setJsonFactory(JSON_FACTORY)
+    .setClientSecrets(clientSecrets.getDetails().getClientId(), clientSecrets.getDetails().getClientSecret())
+    .build()
+  val oauth2: Oauth2 = new Oauth2.Builder(transport, JSON_FACTORY, credential)
+    .setApplicationName("rest-api")
+    .build()
 
   val verifier = new GoogleIdTokenVerifier.Builder(transport, JSON_FACTORY)
-      .setAudience(clientIDList)
-      .build()
+    .setAudience(clientIDList)
+    .build()
 
   def loadGoogleCredentials(): GoogleClientSecrets = {
     val _inputStreamReader = new InputStreamReader(classOf[OAuthService].getResourceAsStream("/google-client-secrets.json"))
@@ -50,7 +58,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
 
   def verifyIdToken(idTokenString: String): GoogleIdToken = {
     val googleToken: GoogleIdToken = verifier.verify(idTokenString)
-    if(googleToken != null) {
+    if (googleToken != null) {
       val payload: Payload = googleToken.getPayload()
       val userId = payload.getSubject()
       val email = payload.getEmail()
@@ -62,37 +70,34 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
 
   def tokenInfo(accessToken: String): Option[Tokeninfo] = {
     try {
-      val credential = new GoogleCredential.Builder()
-        .setTransport(transport)
-        .setJsonFactory(JSON_FACTORY)
-        .setClientSecrets(clientSecrets.getDetails().getClientId(), clientSecrets.getDetails().getClientSecret())
-        .build()
-        .setAccessToken(accessToken)
-      val oauth2: Oauth2 = new Oauth2.Builder(transport, JSON_FACTORY, credential).setApplicationName("rest-api")
-        .build()
+      credential.setAccessToken(accessToken)
       val _tokenInfo = oauth2.tokeninfo()
         .setAccessToken(credential.getAccessToken())
         .execute()
       Option(_tokenInfo)
     } catch {
       case x: Exception =>
-        println(x.getMessage)
-        tokenInfo("")
+        println(x)
+        Option(new Tokeninfo)
     }
   }
 
   def createUserOAuth(userOAuth: UserOAuthEntity): Future[UserOAuthEntity] = db.run(usersOauth returning usersOauth += userOAuth)
 
-  def createUserProfile(userProfile: UserProfileEntity): Future[UserProfileEntity] = db.run(usersProfiles returning usersProfiles += userProfile )
+  def createUserProfile(userProfile: UserProfileEntity): Future[UserProfileEntity] = db.run(usersProfiles returning usersProfiles += userProfile)
 
   def loginOAuth(userOAuth: OAuthToken): Future[Option[UserResponseEntity]] = {
-    println(userOAuth)
+//    println(userOAuth)
     val _tokenInfo = tokenInfo(userOAuth.accessToken).get
     val _oauthUser = usersService.getUserByOAuth(_tokenInfo.getUserId(), userOAuth.oauthType)
-      _oauthUser.flatMap(user => user match {
+    _oauthUser.flatMap(user => {
+      user match {
         case None => signUpGoogle(userOAuth)
-        case whoa => authService.createToken(user.get)
-      })
+        case user => {
+          authService.createToken(user.get)
+        }
+      }
+    })
   }
 
   def signUpGoogle(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
@@ -100,12 +105,12 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
       Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
     val newDbUser: Future[UserEntity] = usersService.createUser(newUser)
-    newDbUser.flatMap( userEntity => {
+    newDbUser.flatMap(userEntity => {
       val firstName: String = tokeninfo.get("given_name").toString()
-      println(tokeninfo.get("given_name"))
+//      println(tokeninfo.get("given_name"))
       val lastName: String = tokeninfo.get("family_name").toString()
       val pictureUrl: String = tokeninfo.get("picture").toString()
-      val newUserProfile: UserProfileEntity = UserProfileEntity(userEntity.id.get, Option(firstName) , Option(lastName), Option(pictureUrl))
+      val newUserProfile: UserProfileEntity = UserProfileEntity(userEntity.id.get, Option(firstName), Option(lastName), Option(pictureUrl))
       createUserProfile(newUserProfile)
       val newUserOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
       createUserOAuth(newUserOAuth)
@@ -124,10 +129,10 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     }
   }
 
-//  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
-//    oauthToken.oauthType match {
-//      case "google" => Future {Option(loginGoogle(oauthToken))}
-//      case whoa => null
-//    }
-//  }
+  //  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+  //    oauthToken.oauthType match {
+  //      case "google" => Future {Option(loginGoogle(oauthToken))}
+  //      case whoa => null
+  //    }
+  //  }
 }
