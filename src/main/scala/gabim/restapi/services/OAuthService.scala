@@ -42,6 +42,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     .setJsonFactory(JSON_FACTORY)
     .setClientSecrets(clientSecrets.getDetails().getClientId(), clientSecrets.getDetails().getClientSecret())
     .build()
+
   val oauth2: Oauth2 = new Oauth2.Builder(transport, JSON_FACTORY, credential)
     .setApplicationName("rest-api")
     .build()
@@ -72,7 +73,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     try {
       credential.setAccessToken(accessToken)
       val _tokenInfo = oauth2.tokeninfo()
-        .setAccessToken(credential.getAccessToken())
+        .setAccessToken(accessToken)
         .execute()
       Option(_tokenInfo)
     } catch {
