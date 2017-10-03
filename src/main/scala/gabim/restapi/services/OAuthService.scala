@@ -85,8 +85,6 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
 
   def createUserOAuth(userOAuth: UserOAuthEntity): Future[UserOAuthEntity] = db.run(usersOauth returning usersOauth += userOAuth)
 
-  def createUserProfile(userProfile: UserProfileEntity): Future[UserProfileEntity] = db.run(usersProfiles returning usersProfiles += userProfile)
-
   def loginOAuth(userOAuth: OAuthToken): Future[Option[UserResponseEntity]] = {
 //    println(userOAuth)
     val _tokenInfo = tokenInfo(userOAuth.accessToken).get
@@ -94,9 +92,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     _oauthUser.flatMap(user => {
       user match {
         case None => signUpGoogle(userOAuth)
-        case user => {
-          authService.createToken(user.get)
-        }
+        case user => authService.createToken(user.get)
       }
     })
   }
@@ -112,7 +108,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
       val lastName: String = tokeninfo.get("family_name").toString()
       val pictureUrl: String = tokeninfo.get("picture").toString()
       val newUserProfile: UserProfileEntity = UserProfileEntity(userEntity.id.get, Option(firstName), Option(lastName), Option(pictureUrl))
-      createUserProfile(newUserProfile)
+      usersService.createUserProfile(newUserProfile)
       val newUserOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
       createUserOAuth(newUserOAuth)
       authService.createToken(userEntity)
