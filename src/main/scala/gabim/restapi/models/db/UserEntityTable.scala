@@ -13,7 +13,7 @@ trait UserEntityTable {
 
   class Users(tag: Tag) extends Table[UserEntity](tag, "users") {
     def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
-    def username = column[String]("username")
+    def username = column[String]("username", O.Unique)
     def password = column[Option[String]]("password")
     def role = column[Option[String]]("role")
     def last_login = column[Option[DateTime]]("last_login")
