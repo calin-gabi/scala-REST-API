@@ -1,3 +1,5 @@
+import com.typesafe.sbt.packager.docker.Cmd
+
 name := "rest-api"
 
 version := "1.0.0"
@@ -56,5 +58,5 @@ libraryDependencies ++= {
 Revolver.settings
 enablePlugins(DockerPlugin)
 
-//dockerExposedPorts := Seq(9000)
-//dockerEntrypoint := Seq("bin/%s" format executableScriptName.value, "-Dconfig.resource=docker.conf")
+dockerExposedPorts := Seq(9000)
+dockerEntrypoint := Seq("bin/%s" format executableScriptName.value, "-Dconfig.resource=docker.conf")
