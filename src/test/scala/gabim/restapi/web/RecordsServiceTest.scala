@@ -76,7 +76,7 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
       var recordId: Long = testRecords.find(_.userId == userId).get.id.get
       val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": "999"}""")
       val url = s"/records/${userId}/${recordId}"
-      Post(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
+      Patch(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.CREATED)
       }
     }
