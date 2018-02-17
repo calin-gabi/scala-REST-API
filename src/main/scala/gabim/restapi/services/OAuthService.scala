@@ -23,7 +23,6 @@ import com.google.api.client.auth.oauth2.{BearerToken, Credential, TokenResponse
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer
 import gabim.restapi.models._
 import org.joda.time.DateTime
-import sun.plugin.util.UserProfile
 
 import scala.concurrent.duration._
 
