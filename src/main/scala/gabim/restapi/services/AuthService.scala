@@ -20,10 +20,12 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
       ) match {
         case Some(user) => db.run(tokens.filter(_.userId === user.id).result.headOption).flatMap {
           case Some(token) => {
-            usersService.getUserProfileByToken(token.token)
-            //Future.successful(response_)
+            authenticate(token.token)
           }
-          case None        => createToken(user)
+          case None        => {
+            val token = createToken(user)
+            authenticate(token)
+          }
         }
         case None => Future.successful(None)
       }
@@ -33,17 +35,20 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
   def getTokenUserByString(token: String): Future[Option[TokenEntity]] = db.run(tokens.filter(_.token === token).result.headOption)
 
   def signUp(newUser: UserEntity): Future[Option[UserResponseEntity]] = {
-    usersService.createUser(newUser).flatMap(user => createToken(user))
+    usersService.createUser(newUser).flatMap(user => {
+      val token = createToken(user)
+      authenticate(token)
+    })
   }
 
   def authenticate(token: String): Future[Option[UserResponseEntity]] = {
     usersService.getUserProfileByToken(token)
   }
 
-  def createToken(user: UserEntity): Future[Option[UserResponseEntity]] = {
-    val token_ = TokenEntity(userId = user.id)
-    val createdToken = db.run(tokens returning tokens += token_)
-    usersService.getUserProfileByToken(token_.token)
+  def createToken(user: UserEntity): String = {
+    val token = TokenEntity(userId = user.id)
+    db.run(tokens returning tokens += token)
+    token.token
   }
 
   def deleteToken(token: String): Future[Int] = db.run(tokens.filter(_.token === token).delete)
