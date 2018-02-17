@@ -26,9 +26,6 @@ object Main extends App{
   implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-  // wait for the postgresql container to initialize
-  // Thread.sleep(2000)
-  println(config.jdbcUrl + "/" + config.dbUser + "/" + config.dbPassword)
   val flywayService = new FlywayService(config.jdbcUrl, config.dbUser, config.dbPassword)
   flywayService.migrateDatabaseSchema
 
