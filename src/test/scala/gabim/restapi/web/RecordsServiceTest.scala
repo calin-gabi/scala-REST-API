@@ -49,8 +49,8 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get: return records of selected user" in new managerContext {
       val testUser = testUsers(0)
-      val userId = testUser.id.get
       val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val userId = testUser.id.get
       val url = s"/records/${userId}"
       Get(url) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
@@ -59,8 +59,8 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on post: insert a new record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val userId = testUser.id.get
       val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val userId = testUser.id.get
       var record: RecordEntity = testRecords.find(_.userId == userId).get
       val requestEntity = HttpEntity(MediaTypes.`application/json`, record.asJson.noSpaces)
       val url = s"/records/${userId}"
@@ -69,12 +69,12 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
       }
     }
 
-    "on post: update a record for a selected user" in new managerContext {
+    "on patch: update a record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val userId = testUser.id.get
       val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val userId = testUser.id.get
       var recordId: Long = testRecords.find(_.userId == userId).get.id.get
-      val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": "999"}""")
+      val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": 999}""")
       val url = s"/records/${userId}/${recordId}"
       Patch(url, requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.CREATED)
@@ -83,8 +83,8 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on delete: delete a record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val userId = testUser.id.get
       val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val userId = testUser.id.get
       var recordId: Long = testRecords.find(_.userId == userId).get.id.get
       val url = s"/records/${userId}/${recordId}"
       Delete(url, recordId) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {

@@ -25,7 +25,7 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
 
   val usersService = new UsersService(databaseService)
   val authService = new AuthService(databaseService)(usersService)
-  val oauthService = new OAuthService(databaseService)(usersService)
+  val oauthService = new OAuthService(databaseService)(usersService, authService)
   val recordsService = new RecordsService(databaseService)
   val httpService = new HttpService(usersService, recordsService, authService, oauthService)
 
@@ -41,7 +41,7 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
 
   def provisionUsersList(passwords: Seq[String], role: String): Seq[UserEntity] = {
     val savedUsers = passwords.map { pass =>
-      UserEntity(Some(Random.nextLong()), "user_" + RandomString(3), pass, Option(role), None, Option(0), None, Option(false),
+      UserEntity(Some(Random.nextLong()), "user_" + RandomString(3), Option(pass), Option(role), None, Option(0), None, Option(false),
                               Option(""), Option(false), Option(""), Option(false), Option(true), None, Option(0))
     }.map(usersService.createUser)
 
@@ -49,7 +49,10 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
   }
 
   def provisionTokensForUsers(usersList: Seq[UserEntity]) = {
-    val savedTokens = usersList.map(authService.createToken)
+    val savedTokens = usersList.map((user) => {
+      val token = authService.createToken(user)
+      authService.authenticate(token)
+    })
     Await.result(Future.sequence(savedTokens), 5.seconds)
   }
 

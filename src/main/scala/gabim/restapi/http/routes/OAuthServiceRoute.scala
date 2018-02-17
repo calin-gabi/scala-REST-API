@@ -3,6 +3,7 @@ package gabim.restapi.http.routes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
+import gabim.restapi.models.OAuthToken
 import gabim.restapi.services.OAuthService
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
@@ -12,10 +13,10 @@ import org.joda.time.DateTime
 
 import scala.concurrent.ExecutionContext
 
-class OAuthServiceRoute(val authService: OAuthService) (implicit executionContext: ExecutionContext) extends CirceSupport {
+class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionContext: ExecutionContext) extends CirceSupport {
 
   import StatusCodes._
-  import authService._
+  import oauthService._
   import databaseService._
   import databaseService.driver.api._
 
@@ -27,11 +28,29 @@ class OAuthServiceRoute(val authService: OAuthService) (implicit executionContex
 
   val route =
     pathPrefix("oauth") {
+      path("register") {
+        pathEndOrSingleSlash {
+          post {
+            entity(as[OAuthToken]) { oauthToken =>
+              complete(Created -> signUpOAuth(oauthToken).map(_.asJson))
+            }
+          }
+        }
+      } ~
+        path("login") {
+          pathEndOrSingleSlash {
+            post {
+              entity(as[OAuthToken]) { oauthToken =>
+                complete(Created -> loginOAuth(oauthToken).map(_.asJson))
+              }
+            }
+          }
+        } ~
       path("verify") {
         pathEndOrSingleSlash {
           post {
-            entity(as[TokenIdString]) { tokenIdString =>
-              verifyIdToken(tokenIdString.token)
+            entity(as[OAuthToken]) { oauthToken =>
+              verifyIdToken(oauthToken.token)
               complete(NoContent)
             }
           }
@@ -40,8 +59,8 @@ class OAuthServiceRoute(val authService: OAuthService) (implicit executionContex
         path("tokeninfo") {
           pathEndOrSingleSlash {
             post {
-              entity(as[TokenIdString]) { tokenIdString =>
-                tokenInfo(tokenIdString.token)
+              entity(as[OAuthToken]) { oauthToken =>
+                tokenInfo(oauthToken.token)
                 complete(NoContent)
               }
             }
@@ -49,5 +68,4 @@ class OAuthServiceRoute(val authService: OAuthService) (implicit executionContex
         }
     }
 
-  private case class TokenIdString(token: String)
 }

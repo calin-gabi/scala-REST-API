@@ -14,7 +14,7 @@ trait UserEntityTable {
   class Users(tag: Tag) extends Table[UserEntity](tag, "users") {
     def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
     def username = column[String]("username")
-    def password = column[String]("password")
+    def password = column[Option[String]]("password")
     def role = column[Option[String]]("role")
     def last_login = column[Option[DateTime]]("last_login")
     def attempts = column[Option[Int]]("attempts")
@@ -30,12 +30,8 @@ trait UserEntityTable {
 
     def * = (id, username, password, role, last_login, attempts, lockoutdate, twoFactor, email, emailconfirmed, phone, phoneconfirmed, active, created, rev) <> ((UserEntity.apply _).tupled, UserEntity.unapply)
 
-//    def record = (id, username, role, email, phone, active) <> ((UserViewEntity.apply _).tupled, UserViewEntity.unapply)
-
   }
 
   protected val users = TableQuery[Users]
-
-//  protected val usersView = TableQuery[Users]
 
 }
