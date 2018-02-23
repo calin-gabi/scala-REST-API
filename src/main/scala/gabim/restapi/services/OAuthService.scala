@@ -104,14 +104,14 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
 
   def signUpOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
     oauthToken.oauthType match {
-      case "google" => signUpGoogle(oauthToken.token)
+      case "google" => signUpGoogle(OAuthToken.idToken)
       case whoa => null
     }
   }
 
   def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
     oauthToken.oauthType match {
-      case "google" => Future {Option(loginGoogle(oauthToken.token))}
+      case "google" => Future {Option(loginGoogle(OAuthToken.idToken))}
       case whoa => null
     }
   }

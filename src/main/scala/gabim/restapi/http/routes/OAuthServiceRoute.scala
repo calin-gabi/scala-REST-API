@@ -50,7 +50,7 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
         pathEndOrSingleSlash {
           post {
             entity(as[OAuthToken]) { oauthToken =>
-              verifyIdToken(oauthToken.token)
+              verifyIdToken(OAuthToken.idToken)
               complete(NoContent)
             }
           }
@@ -60,7 +60,7 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
           pathEndOrSingleSlash {
             post {
               entity(as[OAuthToken]) { oauthToken =>
-                tokenInfo(oauthToken.token)
+                tokenInfo(OAuthToken.idToken)
                 complete(NoContent)
               }
             }
