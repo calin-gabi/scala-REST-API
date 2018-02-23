@@ -1,7 +1,7 @@
 name := "rest-api"
 
 version := "1.0.0"
-scalaVersion := "2.12.1"
+scalaVersion := "2.11.1"
 
 enablePlugins(JavaAppPackaging)
 
