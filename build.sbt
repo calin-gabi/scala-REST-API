@@ -38,6 +38,8 @@ libraryDependencies ++= {
     "io.circe" %% "circe-generic" % circeV,
     "io.circe" %% "circe-parser" % circeV,
 
+    "com.github.swagger-akka-http" %% "swagger-akka-http" % "0.13.0",
+
     "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
 
     "org.scalatest" %% "scalatest" % scalaTestV % "test",

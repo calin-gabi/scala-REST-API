@@ -1,5 +1,6 @@
 package gabim.restapi.http.routes
 
+import akka.event.Logging
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.IntNumber
@@ -9,14 +10,13 @@ import gabim.restapi.services.{AuthService, UsersService}
 
 import scala.concurrent.ExecutionContext
 import gabim.restapi.http.SecurityDirectives
-import gabim.restapi.models.{UserEntity, UserEntityUpdate, UsernameAvailable}
+import gabim.restapi.models.{UserEntity, UserEntityUpdate, UserResponseEntity, UsernameAvailable}
 import org.joda.time.DateTime
 import com.github.tototoshi.slick.PostgresJodaSupport._
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
-import akka.event.Logging
 
 class UsersServiceRoute(val authService: AuthService,
                         usersService: UsersService
@@ -104,5 +104,4 @@ class UsersServiceRoute(val authService: AuthService,
         }
     }
   }
-
 }
