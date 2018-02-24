@@ -2,18 +2,23 @@ package gabim.restapi.http.routes
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+
 import gabim.restapi.models._
 import gabim.restapi.services.OAuthService
+
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
+
 import org.joda.time.DateTime
 
 import scala.concurrent.ExecutionContext
 
-class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionContext: ExecutionContext) extends CirceSupport {
+class OAuthServiceRoute(val oauthService: OAuthService)
+                       (implicit executionContext: ExecutionContext)
+  extends CirceSupport {
 
   import StatusCodes._
   import oauthService._
@@ -36,17 +41,17 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
             }
           }
         }
-      }
-      path("verify") {
-        pathEndOrSingleSlash {
-          post {
-            entity(as[OAuthToken]) { oauthToken =>
-              verifyGoolgeIdToken(oauthToken.idToken)
-              complete(NoContent)
+      } ~
+        path("verify") {
+          pathEndOrSingleSlash {
+            post {
+              entity(as[OAuthToken]) { oauthToken =>
+                verifyGoogleIdToken(oauthToken.idToken)
+                complete(NoContent)
+              }
             }
           }
-        }
-      } ~
+        } ~
         path("tokeninfo") {
           pathEndOrSingleSlash {
             post {

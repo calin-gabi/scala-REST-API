@@ -6,14 +6,18 @@ import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import gabim.restapi.utilities.ClassConfig
 import org.mindrot.jbcrypt.BCrypt
+import authentikat.jwt._
 
 class AuthService(val databaseService: DatabaseService)(usersService: UsersService)(implicit executionContext: ExecutionContext) extends TokenEntityTable {
 
   import databaseService._
   import databaseService.driver.api._
 
-  def signIn(login: String, password: String): Future[Option[UserResponseEntity]] = {
+  val config = new ClassConfig
+
+  def signIn(login: String, password: String): Future[String] = {
     db.run(users
             .filter(_.username === login)
             .result)
@@ -24,25 +28,41 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
             db.run(tokens
                     .filter(_.userId === user.id)
                     .result.headOption)
-              .flatMap {
-                case Some(token) => usersService.getUserProfileByToken(token.token)
-                case None        => usersService.getUserProfileByToken(Await.result(createToken(user), 5.seconds).token)
+              .map {
+                case Some(token) => token.token
+                case None        => Await.result(createToken(user), 5.seconds).token
             }
-          case None => Future.successful(None)
+          case None => Future.successful("")
         }
     }
   }
 
-  def getTokenUserByString(token: String): Future[Option[TokenEntity]] = db.run(tokens.filter(_.token === token).result.headOption)
+  def getTokenByString(token: String): Future[Option[TokenEntity]] = db.run(tokens.filter(_.token === token).result.headOption)
 
-  def signUp(newUser: UserEntity): Future[Option[UserResponseEntity]] =
+  def signUp(newUser: UserEntity): Future[String] =
     usersService
       .createUser(newUser)
-      .flatMap(user => usersService.getUserProfileByToken(Await.result(createToken(user), 5.seconds).token))
+      .map(user => Await.result(createToken(user), 5.seconds).token)
 
-  def authenticate(token: String): Future[Option[UserResponseEntity]] = usersService.getUserProfileByToken(token)
+  def authenticate(token: String): Future[String] =
+    getTokenByString(token)
+      .map {
+        case Some(token) => token.token
+        case None => "false"
+      }
 
-  def createToken(user: UserEntity): Future[TokenEntity] = db.run(tokens returning tokens += TokenEntity(userId = user.id))
+  def getAuthenticatedUser(token: String): Future[Option[UserResponseEntity]] =
+    usersService.getUserProfileByToken(token)
+
+  def createJwtToken(userEntity: UserEntity): String = {
+    val claimsSet = JwtClaimsSet(Map("username" -> userEntity.username, "email" -> userEntity.email, "role" -> userEntity.role))
+    JsonWebToken(JwtHeader(config.jwtHead), claimsSet, config.jwtSecret)
+  }
+
+  def validateJwtToken(jwtToken: String): Boolean = JsonWebToken.validate(jwtToken, "secretkey")
+
+  def createToken(userEntity: UserEntity): Future[TokenEntity] =
+    db.run(tokens returning tokens += TokenEntity(userId = userEntity.id, token = createJwtToken(userEntity)))
 
   def deleteToken(token: String): Future[Int] = db.run(tokens.filter(_.token === token).delete)
 }

@@ -21,7 +21,7 @@ import java.io.InputStreamReader
 
 import com.google.api.client.auth.oauth2.{BearerToken, Credential, TokenResponse}
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer
-import gabim.restapi.models.{OAuthToken, UserEntity, UserOAuthEntity, UserResponseEntity}
+import gabim.restapi.models._
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
@@ -47,7 +47,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     _clientSecrets
   }
 
-  def verifyGoolgeIdToken(idTokenString: String): Boolean = {
+  def verifyGoogleIdToken(idTokenString: String): Boolean = {
     if(googleVerifier.verify(idTokenString) != null) {
       println("Token valid!")
       true
@@ -82,28 +82,27 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     usersService.createUser(newUser)
   }
 
-  def signUpGoogle(token: String): Future[Option[UserResponseEntity]] = {
-    val tokeninfo = googleTokenInfo(token)
-    createUserEntityFromTokenInfo(googleTokenInfo(token))
+  def signUpGoogle(accessToken: String): Future[String] = {
+    val tokeninfo: Tokeninfo = googleTokenInfo(accessToken)
+    createUserEntityFromTokenInfo(tokeninfo)
       .flatMap(userEntity => createUserOAuthEntity(userEntity, tokeninfo))
       .flatMap(userOAuthEntity => loginOAuth(userOAuthEntity))
   }
 
-  def signUpOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+  def signUpOAuth(oauthToken: OAuthToken): Future[String] = {
     oauthToken.oauthType match {
-      case "google" => signUpGoogle(oauthToken.idToken)
+      case "google" => signUpGoogle(oauthToken.accessToken)
       case whoa => null
     }
   }
 
-  def loginOAuth(userOAuth: UserOAuthEntity): Future[Option[UserResponseEntity]] = {
-    usersService.getUserByOAuth(userOAuth).flatMap { user =>
-      val token = Await.result(authService.createToken(user.get), 5.seconds)
-      authService.authenticate(token.token)
-    }
+  def loginOAuth(userOAuth: UserOAuthEntity): Future[String] = {
+    usersService.getUserByOAuth(userOAuth).map (
+      user => Await.result(authService.createToken(user.get), 5.seconds).token
+    )
   }
 
-  def authenticateOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+  def authenticateOAuth(oauthToken: OAuthToken): Future[String] = {
     db.run(usersOauth
       .filter(_.oauthType === oauthToken.oauthType)
       .filter(_.oauthId === oauthToken.idToken)
