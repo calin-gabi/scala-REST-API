@@ -50,8 +50,8 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
 
   def provisionTokensForUsers(usersList: Seq[UserEntity]) = {
     val savedTokens = usersList.map((user) => {
-      val token = authService.createToken(user)
-      authService.authenticate(token)
+      val token = Await.result(authService.createToken(user), 5.seconds)
+      authService.authenticate(token.token)
     })
     Await.result(Future.sequence(savedTokens), 5.seconds)
   }

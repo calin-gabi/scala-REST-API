@@ -3,7 +3,7 @@ package gabim.restapi.http.routes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import gabim.restapi.models.OAuthToken
+import gabim.restapi.models._
 import gabim.restapi.services.OAuthService
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
@@ -28,29 +28,20 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
 
   val route =
     pathPrefix("oauth") {
-      path("register") {
+      path("authenticate") {
         pathEndOrSingleSlash {
           post {
             entity(as[OAuthToken]) { oauthToken =>
-              complete(Created -> signUpOAuth(oauthToken).map(_.asJson))
+              complete(Created -> authenticateOAuth(oauthToken).map(_.asJson))
             }
           }
         }
-      } ~
-        path("login") {
-          pathEndOrSingleSlash {
-            post {
-              entity(as[OAuthToken]) { oauthToken =>
-                complete(Created -> loginOAuth(oauthToken).map(_.asJson))
-              }
-            }
-          }
-        } ~
+      }
       path("verify") {
         pathEndOrSingleSlash {
           post {
             entity(as[OAuthToken]) { oauthToken =>
-              verifyIdToken(OAuthToken.idToken)
+              verifyGoolgeIdToken(oauthToken.idToken)
               complete(NoContent)
             }
           }
@@ -60,7 +51,7 @@ class OAuthServiceRoute(val oauthService: OAuthService) (implicit executionConte
           pathEndOrSingleSlash {
             post {
               entity(as[OAuthToken]) { oauthToken =>
-                tokenInfo(OAuthToken.idToken)
+                googleTokenInfo(oauthToken.idToken)
                 complete(NoContent)
               }
             }

@@ -15,9 +15,7 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   import databaseService._
   import databaseService.driver.api._
 
-  def getRecordById(id: Long) : Future[Option[RecordEntity]] = {
-    db.run(records.filter(_.id === id).result.headOption)
-  }
+  def getRecordById(id: Long) : Future[Option[RecordEntity]] = db.run(records.filter(_.id === id).result.headOption)
 
   implicit val dateTimeColumnType = MappedColumnType.base[DateTime, Timestamp](
     d => new Timestamp(d.getMillis),
@@ -33,22 +31,25 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
   }
 
   def updateRecord(id: Long, recordUpdate: RecordEntityUpdate) : Future[Option[RecordEntity]] = {
-    getRecordById(id).flatMap{
-      case Some(record) =>
-        val updatedRecord = recordUpdate.merge(record)
-        db.run(records.filter(_.id === id).update(updatedRecord)).map(_ => Some(updatedRecord))
-      case None => Future.successful(None)
+    getRecordById(id)
+      .flatMap{
+        case Some(record) =>
+          val updatedRecord = recordUpdate.merge(record)
+          db.run(records.filter(_.id === id).update(updatedRecord)).map(_ => Some(updatedRecord))
+        case None => Future.successful(None)
     }
   }
 
   def deleteRecord(id: Long) : Future[Int] = db.run(records.filter(_.id === id).delete)
 
-  def filterRecord(userId: Long, startDate: DateTime, endDate: DateTime): Future[Seq[RecordEntity]] = db.run(records.filter(r => (r.userId === userId && r.date > startDate && r.date < endDate) ).sortBy(_.date.desc.nullsFirst).result)
+  def filterRecord(userId: Long, startDate: DateTime, endDate: DateTime): Future[Seq[RecordEntity]] =
+    db.run(records
+            .filter(r => (r.userId === userId && r.date > startDate && r.date < endDate) )
+      .sortBy(_.date.desc.nullsFirst).result)
 
-  def canUpdateRecords(user: UserResponseEntity, userId: Long) = {
+  def canUpdateRecords(user: UserResponseEntity, userId: Long) =
     Seq("admin", "manager").contains(user.role) || user.id == userId
-  }
-  def canViewRecords(user: UserResponseEntity, userId: Long) = {
+
+  def canViewRecords(user: UserResponseEntity, userId: Long) =
     Seq("admin", "manager").contains(user.role) || user.id == userId
-  }
 }

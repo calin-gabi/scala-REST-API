@@ -4,7 +4,7 @@ import gabim.restapi.models._
 import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UserOAuthEntityTable, UsersProfileEntityTable}
 import gabim.restapi.utilities.DatabaseService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import com.github.t3hnar.bcrypt._
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
@@ -61,10 +61,14 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
   }
 
   def updateUser(id: Long, userUpdate: UserEntityUpdate): Future[Option[UserViewEntity]] = getUserById(id).flatMap {
-    case Some(user) =>
+    case Some(user) => {
       val updatedUser = userUpdate.merge(user)
-      db.run(users.filter(_.id === id).update(updatedUser)).map(_ =>
-        Some(UserViewEntity(updatedUser.id, updatedUser.username, updatedUser.role, updatedUser.email, updatedUser.phone, updatedUser.active)))
+      db.run(users
+              .filter(_.id === id)
+              .update(updatedUser))
+        .map(_ =>
+          Some(UserViewEntity(updatedUser.id, updatedUser.username, updatedUser.role, updatedUser.email, updatedUser.phone, updatedUser.active)))
+    }
     case None => Future.successful(None)
   }
 

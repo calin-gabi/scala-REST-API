@@ -37,7 +37,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
   val JSON_FACTORY = JacksonFactory.getDefaultInstance()
   val clientSecrets: GoogleClientSecrets = loadGoogleCredentials()
 
-  val verifier = new GoogleIdTokenVerifier.Builder(transport, JSON_FACTORY)
+  val googleVerifier = new GoogleIdTokenVerifier.Builder(transport, JSON_FACTORY)
       .setAudience(clientIDList)
       .build()
 
@@ -47,14 +47,9 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     _clientSecrets
   }
 
-  def verifyIdToken(idTokenString: String): Boolean = {
-    val googleToken = verifier.verify(idTokenString)
-    if(googleToken != null) {
-      val payload: Payload = googleToken.getPayload()
-      val userId = payload.getSubject()
-      println(userId)
-      val email = payload.getEmail()
-      println(email)
+  def verifyGoolgeIdToken(idTokenString: String): Boolean = {
+    if(googleVerifier.verify(idTokenString) != null) {
+      println("Token valid!")
       true
     } else {
       println("Invalid token!")
@@ -62,7 +57,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
     }
   }
 
-  def tokenInfo(accessToken: String): Tokeninfo = {
+  def googleTokenInfo(accessToken: String): Tokeninfo = {
     val credential = new GoogleCredential.Builder()
         .setTransport(transport)
         .setJsonFactory(JSON_FACTORY)
@@ -71,48 +66,52 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
         .setAccessToken(accessToken)
     val oauth2: Oauth2 = new Oauth2.Builder(transport, JSON_FACTORY, credential).setApplicationName("rest-api")
       .build()
-    val _tokenInfo = oauth2.tokeninfo()
+    oauth2.tokeninfo()
       .setAccessToken(credential.getAccessToken())
       .execute()
-    _tokenInfo
   }
 
-  def createUserOAuth(userOAuth: UserOAuthEntity): Future[UserOAuthEntity] = {
+  def createUserOAuthEntity(userEntity: UserEntity, tokeninfo: Tokeninfo): Future[UserOAuthEntity] = {
+    val userOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
     db.run(usersOauth returning usersOauth += userOAuth)
   }
 
-  def loginOAuth(userOAuth: UserOAuthEntity): Future[Option[UserResponseEntity]] = {
-    usersService.getUserByOAuth(userOAuth).flatMap { user =>
-      authService.createToken(user.get)
-    }
+  def createUserEntityFromTokenInfo (tokeninfo: Tokeninfo): Future[UserEntity] = {
+    val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
+    Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
+    usersService.createUser(newUser)
   }
 
   def signUpGoogle(token: String): Future[Option[UserResponseEntity]] = {
-    val tokeninfo = tokenInfo(token)
-    val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
-      Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
-    val newDbUser: Future[UserEntity] = usersService.createUser(newUser)
-    newDbUser.flatMap( userEntity => {
-      val newUserOAuth: UserOAuthEntity = UserOAuthEntity(userEntity.id.get, tokeninfo.getUserId(), "google")
-      createUserOAuth(newUserOAuth)
-    }).flatMap(userOAuthEntity => loginOAuth(userOAuthEntity))
-  }
-
-  def loginGoogle(token: String): UserResponseEntity = {
-    null
+    val tokeninfo = googleTokenInfo(token)
+    createUserEntityFromTokenInfo(googleTokenInfo(token))
+      .flatMap(userEntity => createUserOAuthEntity(userEntity, tokeninfo))
+      .flatMap(userOAuthEntity => loginOAuth(userOAuthEntity))
   }
 
   def signUpOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
     oauthToken.oauthType match {
-      case "google" => signUpGoogle(OAuthToken.idToken)
+      case "google" => signUpGoogle(oauthToken.idToken)
       case whoa => null
     }
   }
 
-  def loginOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
-    oauthToken.oauthType match {
-      case "google" => Future {Option(loginGoogle(OAuthToken.idToken))}
-      case whoa => null
+  def loginOAuth(userOAuth: UserOAuthEntity): Future[Option[UserResponseEntity]] = {
+    usersService.getUserByOAuth(userOAuth).flatMap { user =>
+      val token = Await.result(authService.createToken(user.get), 5.seconds)
+      authService.authenticate(token.token)
     }
   }
+
+  def authenticateOAuth(oauthToken: OAuthToken): Future[Option[UserResponseEntity]] = {
+    db.run(usersOauth
+      .filter(_.oauthType === oauthToken.oauthType)
+      .filter(_.oauthId === oauthToken.idToken)
+      .result.headOption)
+      .flatMap {
+        case Some(userOAuth) => loginOAuth(userOAuth)
+        case None => signUpOAuth(oauthToken)
+      }
+  }
+
 }
