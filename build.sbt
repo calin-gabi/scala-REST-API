@@ -1,7 +1,7 @@
 name := "rest-api"
 
 version := "1.0.0"
-scalaVersion := "2.11.1"
+scalaVersion := "2.12.1"
 
 enablePlugins(JavaAppPackaging)
 
@@ -37,6 +37,8 @@ libraryDependencies ++= {
     "io.circe" %% "circe-core" % circeV,
     "io.circe" %% "circe-generic" % circeV,
     "io.circe" %% "circe-parser" % circeV,
+
+    "com.jason-goodwin" %% "authentikat-jwt" % "0.4.5",
 
     "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
 

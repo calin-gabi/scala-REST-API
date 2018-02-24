@@ -6,18 +6,12 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import gabim.restapi.http.HttpService
 import gabim.restapi.services.{AuthService, OAuthService, RecordsService, UsersService}
-import gabim.restapi.utilities.{ClassConfig, DatabaseService, FlywayService}
+import gabim.restapi.utilities.{FlywayService, DatabaseService, ClassConfig}
 import java.sql.{Connection, DriverManager}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-object Main extends App{
-/*  val nodeConfig = NodeConfig parse args
-
-  // If a config could be parsed - start the system
-  nodeConfig map { c =>
-  }*/
-
+object Main extends App {
 
   val config = new ClassConfig
 
@@ -26,10 +20,8 @@ object Main extends App{
   implicit val log: LoggingAdapter = Logging(actorSystem, getClass)
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-  // wait for the postgresql container to initialize
-  // Thread.sleep(2000)
-  println(config.jdbcUrl + "/" + config.dbUser + "/" + config.dbPassword)
   val flywayService = new FlywayService(config.jdbcUrl, config.dbUser, config.dbPassword)
+  flywayService.migrateDatabaseSchema()
 
   val databaseService = new DatabaseService(config.jdbcUrl, config.dbUser, config.dbPassword)
 

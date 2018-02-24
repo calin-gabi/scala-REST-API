@@ -1,31 +1,28 @@
 package gabim.restapi.http.routes
 
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpCredentials}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.directives.Credentials
-import akka.parboiled2.util.Base64
-import akka.http.scaladsl.model.HttpCharsets._
-import akka.http.scaladsl.server.directives.BasicDirectives.provide
-import akka.http.scaladsl.server.directives.RouteDirectives.reject
+
 import com.github.t3hnar.bcrypt.BCrypt
 import org.mindrot.jbcrypt.BCrypt
-import de.heikoseeberger.akkahttpcirce.CirceSupport
-import gabim.restapi.services.AuthService
-import gabim.restapi.services.UsersService
 
-import scala.concurrent.{ExecutionContext, Future}
-import gabim.restapi.http.SecurityDirectives
+import gabim.restapi.services.AuthService
 import gabim.restapi.models.{UserEntity, UserResponseEntity}
+
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
+
 import org.joda.time.DateTime
 
+import scala.concurrent.ExecutionContext
 
-class AuthServiceRoute(val authService: AuthService)(implicit executionContext: ExecutionContext) extends CirceSupport with SecurityDirectives {
+
+class AuthServiceRoute(val authService: AuthService)
+                      (implicit executionContext: ExecutionContext)
+  extends CirceSupport {
 
   import StatusCodes._
   import authService._
@@ -42,8 +39,8 @@ class AuthServiceRoute(val authService: AuthService)(implicit executionContext: 
     pathPrefix("auth") {
     path("signIn") {
       pathEndOrSingleSlash {
-          post {
-            entity(as[LoginPassword]){ loginPassword =>
+        post {
+          entity(as[LoginPassword]){ loginPassword =>
             complete(signIn(loginPassword.username, loginPassword.password).map(_.asJson))
           }
         }

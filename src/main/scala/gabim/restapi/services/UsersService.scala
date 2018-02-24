@@ -5,6 +5,7 @@ import gabim.restapi.models.db.{TokenEntityTable, UserEntityTable, UserOAuthEnti
 import gabim.restapi.utilities.DatabaseService
 
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 import com.github.t3hnar.bcrypt._
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
@@ -51,9 +52,18 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
     case None => "true"
   }
 
+  def getUserDefaultRole(): Future[String] = {
+    db.run(users.filter(_.role === "admin").result.headOption)
+        .map {
+          case Some(user) => "user"
+          case None => "admin"
+        }
+  }
+
   def createUser(user: UserEntity): Future[UserEntity] = {
     val hashPass = BCrypt.hashpw(user.password.get, generateSalt)
-    val dbUser: UserEntity = UserEntity(None, user.username, Option(hashPass), user.role.orElse(Option("user")), user.last_login,
+    val role = Await.result(getUserDefaultRole(), 5.seconds)
+    val dbUser: UserEntity = UserEntity(None, user.username, Option(hashPass), user.role.orElse(Option(role)), user.last_login,
       user.attempts.orElse(Option(0)), user.lockoutdate, user.twofactor.orElse(Option(false)),
       user.email, user.emailconfirmed.orElse(Option(false)), user.phone, user.phoneconfirmed.orElse(Option(false)),
       user.active.orElse(Option(true)), user.created.orElse(Option(new DateTime())), user.rev.orElse(Option(0)))
