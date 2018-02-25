@@ -17,13 +17,13 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   val config = new ClassConfig
 
-  def signIn(login: String, password: String): Future[String] = {
+  def signIn(loginPassword: LoginPassword): Future[String] = {
     db.run(users
-            .filter(_.username === login)
+            .filter(_.username === loginPassword.username)
             .result)
       .flatMap { users =>
         users
-          .find(user => BCrypt.checkpw(password, user.password.get)) match {
+          .find(user => BCrypt.checkpw(loginPassword.password, user.password.get)) match {
           case Some(user) =>
             db.run(tokens
                     .filter(_.userId === user.id)

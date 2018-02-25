@@ -2,19 +2,15 @@ package gabim.restapi.http.routes
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-
 import com.github.t3hnar.bcrypt.BCrypt
 import org.mindrot.jbcrypt.BCrypt
-
 import gabim.restapi.services.AuthService
-import gabim.restapi.models.{UserEntity, UserResponseEntity}
-
+import gabim.restapi.models.{LoginPassword, UserEntity, UserResponseEntity}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
-
 import org.joda.time.DateTime
 
 import scala.concurrent.ExecutionContext
@@ -41,7 +37,7 @@ class AuthServiceRoute(val authService: AuthService)
       pathEndOrSingleSlash {
         post {
           entity(as[LoginPassword]){ loginPassword =>
-            complete(signIn(loginPassword.username, loginPassword.password).map(_.asJson))
+            complete(signIn(loginPassword).map(_.asJson))
           }
         }
       }
@@ -72,8 +68,6 @@ class AuthServiceRoute(val authService: AuthService)
         }
       }
   }
-
-  private case class LoginPassword(username: String, password: String)
 
   private case class Token(token: String)
 

@@ -72,3 +72,5 @@ case class UserViewEntity (
                            active: Option[Boolean]) {
 
 }
+
+case class LoginPassword(username: String, password: String)
