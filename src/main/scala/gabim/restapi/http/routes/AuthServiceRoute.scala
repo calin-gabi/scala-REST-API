@@ -12,8 +12,9 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.joda.time.DateTime
+import scala.concurrent.duration._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 
 
 class AuthServiceRoute(val authService: AuthService)
@@ -37,7 +38,10 @@ class AuthServiceRoute(val authService: AuthService)
       pathEndOrSingleSlash {
         post {
           entity(as[LoginPassword]){ loginPassword =>
-            complete(signIn(loginPassword).map(_.asJson))
+            Await.result(signIn(loginPassword), 5.seconds) match {
+              case Some(token) => complete(OK -> token.asJson)
+              case None => complete(Forbidden -> "Authentication unsuccessful!")
+            }
           }
         }
       }

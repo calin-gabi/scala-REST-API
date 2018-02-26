@@ -9,6 +9,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import gabim.restapi.utilities.ClassConfig
 import org.mindrot.jbcrypt.BCrypt
 import authentikat.jwt._
+import javax.xml.ws.http.HTTPException
 
 class AuthService(val databaseService: DatabaseService)(usersService: UsersService)(implicit executionContext: ExecutionContext) extends TokenEntityTable {
 
@@ -17,7 +18,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   val config = new ClassConfig
 
-  def signIn(loginPassword: LoginPassword): Future[String] = {
+  def signIn(loginPassword: LoginPassword): Future[Option[TokenResponse]] = {
     db.run(users
             .filter(_.username === loginPassword.username)
             .result)
@@ -29,10 +30,10 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
                     .filter(_.userId === user.id)
                     .result.headOption)
               .map {
-                case Some(token) => token.token
-                case None        => Await.result(createToken(user), 5.seconds).token
+                case Some(token) => Some(TokenResponse(token.token))
+                case None        => Some(TokenResponse(Await.result(createToken(user), 5.seconds).token))
             }
-          case None => Future.successful("")
+          case None => Future.successful(None)
         }
     }
   }

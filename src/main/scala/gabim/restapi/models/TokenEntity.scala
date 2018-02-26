@@ -5,3 +5,7 @@ case class TokenEntity(
                         userId: Option[Long],
                         token: String
                       )
+
+case class TokenResponse (
+                           token: String
+                         )
