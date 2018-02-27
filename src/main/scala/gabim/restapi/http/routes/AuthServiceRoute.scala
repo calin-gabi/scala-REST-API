@@ -48,9 +48,10 @@ class AuthServiceRoute(val authService: AuthService)
     } ~
       path("isAuthenticated") {
         pathEndOrSingleSlash {
-          (get & optionalHeaderValueByName("Token")) { token =>
+          (get & optionalHeaderValueByName("Authorization")) { key =>
+            println(key.getOrElse("").replace("Bearer ", ""))
             complete(
-              authService.authenticate(token.getOrElse("")).map(_.asJson)
+              authService.authenticated(key.getOrElse("").replace("Bearer ", "")).map(_.asJson)
             )
           }
         }
@@ -66,8 +67,8 @@ class AuthServiceRoute(val authService: AuthService)
       }~
       path("signOut") {
         pathEndOrSingleSlash {
-          (post & optionalHeaderValueByName("Token")) { token =>
-            complete(authService.deleteToken(token.get))
+          (post & optionalHeaderValueByName("Authorization")) { key =>
+            complete(authService.deleteToken(key.getOrElse("").replace("Bearer ", "")))
           }
         }
       }

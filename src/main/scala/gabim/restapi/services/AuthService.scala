@@ -52,6 +52,13 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
         case None => "false"
       }
 
+  def authenticated(token: String): Future[Boolean] =
+    getTokenByString(token)
+      .map {
+        case Some(token) => true
+        case None => false
+      }
+
   def getAuthenticatedUser(token: String): Future[Option[UserResponseEntity]] =
     usersService.getUserProfileByToken(token)
 

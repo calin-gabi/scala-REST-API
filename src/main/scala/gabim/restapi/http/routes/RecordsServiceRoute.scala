@@ -67,8 +67,6 @@ class RecordsServiceRoute(val authService: AuthService,
               }
             } ~
             pathPrefix(LongNumber) { recordId => {
-              println(loggedUser )
-              println(userId )
               (pathEndOrSingleSlash & authorize(recordsService canUpdateRecords(loggedUser, userId))){
                 patch {
                   entity(as[RecordEntityUpdate]) { recordUpdate => {

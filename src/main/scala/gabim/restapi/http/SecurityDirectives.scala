@@ -13,8 +13,8 @@ trait SecurityDirectives {
   import RouteDirectives._
 
   def authenticate: Directive1[UserResponseEntity] = {
-    headerValueByName("Token").flatMap { token =>
-      onSuccess(authService.getAuthenticatedUser(token)).flatMap {
+    headerValueByName("Authorization").flatMap { key =>
+      onSuccess(authService.getAuthenticatedUser(key.replace("Bearer ", ""))).flatMap {
         case Some(user) => provide(user)
         case None       => reject
       }

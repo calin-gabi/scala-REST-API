@@ -22,7 +22,7 @@ trait CORSConfig {
     mapResponseHeaders { headers =>
       allowedOriginHeader +:
         `Access-Control-Allow-Credentials`(true) +:
-        `Access-Control-Allow-Headers`("Token", "Content-Type", "X-Requested-With") +:
+        `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With") +:
         headers
     }
   }
