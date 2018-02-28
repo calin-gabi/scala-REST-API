@@ -7,6 +7,7 @@ import com.github.tototoshi.slick.PostgresJodaSupport._
 case class UserEntity(
                        id: Option[Long] = None,
                        username: String,
+                       fullname: String,
                        password: Option[String],
                        role: Option[String],
                        last_login: Option[DateTime],
@@ -26,6 +27,7 @@ case class UserEntity(
 
 case class UserEntityUpdate(
                              username: Option[String] = None,
+                             fullname: Option[String] = None,
                              password: Option[String] = None,
                              role: Option[String] = None,
                              last_login: Option[DateTime] = None,
@@ -43,6 +45,7 @@ case class UserEntityUpdate(
     UserEntity(
       user.id,
       username.getOrElse(user.username),
+      fullname.getOrElse(user.fullname),
       password.orElse(user.password),
       role.orElse(user.role),
       last_login.orElse(user.last_login),
@@ -55,17 +58,18 @@ case class UserEntityUpdate(
       phoneconfirmed.orElse(user.phoneconfirmed),
       active.orElse(user.active),
       user.created,
-      user.rev  )
+      user.rev)
   }
 }
 
 case class UsernameAvailable(
-                             username: String
-                           )
+                              username: String
+                            )
 
-case class UserViewEntity (
-                            id: Option[Long] = None,
+case class UserViewEntity(
+                           id: Option[Long] = None,
                            username: String,
+                           fullname: String,
                            role: Option[String],
                            email: Option[String],
                            phone: Option[String],
