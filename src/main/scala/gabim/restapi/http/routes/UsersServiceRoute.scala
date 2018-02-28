@@ -33,7 +33,7 @@ class UsersServiceRoute(val authService: AuthService,
 
   implicit def usersRejectionHandler =
     RejectionHandler.newBuilder()
-      .handle { case MissingHeaderRejection("Token") =>
+      .handle { case MissingHeaderRejection("Authorization") =>
         complete(HttpResponse(BadRequest, entity = "No token, no service!!!"))
       }
       .handle { case AuthorizationFailedRejection =>

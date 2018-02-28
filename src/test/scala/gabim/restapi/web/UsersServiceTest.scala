@@ -52,7 +52,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get users: return 403 Forbidden if role is user" in new userContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Get("/users") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.FORBIDDEN)
       }
@@ -60,7 +60,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get users: return list if role is manager" in new adminContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Get("/users") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
       }
@@ -68,7 +68,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get users: return list if role is admin" in new adminContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Get("/users") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
       }
@@ -76,7 +76,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get me: return logged user" in new userContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Get("/users/me") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
       }
@@ -85,7 +85,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
     "get user by id" in new adminContext {
       val testUser = testUsers(0)
       val userId = testUser.id.get
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Get(s"/users/${userId}") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
         //responseAs[UserEntity] should be(testUser)
@@ -95,7 +95,7 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
     "delete user by id" in new adminContext {
       val testUser = testUsers(0)
       val userId = testUser.id.get
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Delete(s"/users/${userId}") ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(NoContent)
         whenReady(getUserById(testUser.id.get)) { result =>
@@ -108,11 +108,10 @@ class UsersServiceTest extends BaseServiceTest with ScalaFutures{
       val testUser = testUsers(0)
       val newEmail = RandomString(10)
       val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"email": "$newEmail"}""")
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       Post("/users/me", requestEntity) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
         response.status should be(StatusCodes.OK)
         whenReady(getUserById(testUser.id.get)) { result =>
-          //println(result)
           result.get.email should be(Option(newEmail))
         }
       }

@@ -49,7 +49,6 @@ class AuthServiceRoute(val authService: AuthService)
       path("isAuthenticated") {
         pathEndOrSingleSlash {
           (get & optionalHeaderValueByName("Authorization")) { key =>
-            println(key.getOrElse("").replace("Bearer ", ""))
             complete(
               authService.authenticated(key.getOrElse("").replace("Bearer ", "")).map(_.asJson)
             )

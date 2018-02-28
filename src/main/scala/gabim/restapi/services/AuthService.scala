@@ -63,7 +63,7 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
     usersService.getUserProfileByToken(token)
 
   def createJwtToken(userEntity: UserEntity): String = {
-    val claimsSet = JwtClaimsSet(Map("username" -> userEntity.username, "email" -> userEntity.email, "role" -> userEntity.role))
+    val claimsSet = JwtClaimsSet(Map("userid" -> userEntity.id, "username" -> userEntity.username, "email" -> userEntity.email, "role" -> userEntity.role))
     JsonWebToken(JwtHeader(config.jwtHead), claimsSet, config.jwtSecret)
   }
 

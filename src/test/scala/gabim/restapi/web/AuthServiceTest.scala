@@ -3,7 +3,7 @@ package gabim.restapi.web
 import akka.http.scaladsl.model.{HttpEntity, MediaTypes, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server
-import gabim.restapi.models.{TokenEntity, UserEntity, UserResponseEntity}
+import gabim.restapi.models.{TokenEntity, TokenResponse, UserEntity, UserResponseEntity}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.auto._
@@ -51,7 +51,7 @@ class AuthServiceTest extends BaseServiceTest{
       val testUser = testUsers(1)
       val pass = passwords(1)
       signInUser(testUser, pass, route) {
-        responseAs[UserResponseEntity] should be
+        responseAs[TokenResponse] should be
       }
     }
   }

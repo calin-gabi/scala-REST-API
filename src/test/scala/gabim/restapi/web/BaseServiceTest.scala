@@ -16,7 +16,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Random
 
-
 trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest with CirceSupport {
 
   dbProcess.getProcessId
@@ -54,6 +53,10 @@ trait BaseServiceTest extends WordSpec with Matchers with ScalatestRouteTest wit
       authService.authenticate(token.token)
     })
     Await.result(Future.sequence(savedTokens), 5.seconds)
+  }
+
+  def provisionTokensForUser(user: UserEntity) = {
+    "Bearer " + Await.result(authService.createToken(user), 5.seconds).token
   }
 
   def provisionRecordsList(usersList: Seq[UserEntity]) = {

@@ -29,7 +29,7 @@ class RecordsServiceRoute(val authService: AuthService,
 
   implicit def recordsRejectionHandler =
     RejectionHandler.newBuilder()
-      .handle { case MissingHeaderRejection("Token") =>
+      .handle { case MissingHeaderRejection("Authorization") =>
         complete(HttpResponse(BadRequest, entity = "No token, no service!!!"))
       }
       .handle { case AuthorizationFailedRejection =>

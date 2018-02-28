@@ -49,7 +49,7 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on get: return records of selected user" in new managerContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       val userId = testUser.id.get
       val url = s"/records/${userId}"
       Get(url) ~> addHeader(authorization._1, authorization._2) ~> route ~> check {
@@ -59,7 +59,7 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on post: insert a new record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       val userId = testUser.id.get
       var record: RecordEntity = testRecords.find(_.userId == userId).get
       val requestEntity = HttpEntity(MediaTypes.`application/json`, record.asJson.noSpaces)
@@ -71,7 +71,7 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on patch: update a record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       val userId = testUser.id.get
       var recordId: Long = testRecords.find(_.userId == userId).get.id.get
       val requestEntity = HttpEntity(MediaTypes.`application/json`, s"""{"amount": 999}""")
@@ -83,7 +83,7 @@ class RecordsServiceTest extends BaseServiceTest with ScalaFutures{
 
     "on delete: delete a record for a selected user" in new managerContext {
       val testUser = testUsers(0)
-      val authorization = "Token" -> testTokens.find(_.get.id === testUser.id.get).get.get.token.get
+      val authorization = "Authorization" -> provisionTokensForUser(testUser)
       val userId = testUser.id.get
       var recordId: Long = testRecords.find(_.userId == userId).get.id.get
       val url = s"/records/${userId}/${recordId}"
