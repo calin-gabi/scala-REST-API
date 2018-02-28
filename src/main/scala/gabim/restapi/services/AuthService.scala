@@ -20,30 +20,30 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
 
   def signIn(loginPassword: LoginPassword): Future[Option[TokenResponse]] = {
     db.run(users
-            .filter(_.username === loginPassword.username)
-            .result)
+      .filter(_.username === loginPassword.username)
+      .result)
       .flatMap { users =>
         users
           .find(user => BCrypt.checkpw(loginPassword.password, user.password.get)) match {
           case Some(user) =>
             db.run(tokens
-                    .filter(_.userId === user.id)
-                    .result.headOption)
+              .filter(_.userId === user.id)
+              .result.headOption)
               .map {
                 case Some(token) => Some(TokenResponse(token.token))
-                case None        => Some(TokenResponse(Await.result(createToken(user), 5.seconds).token))
-            }
+                case None => Some(TokenResponse(Await.result(createToken(user), 5.seconds).token))
+              }
           case None => Future.successful(None)
         }
-    }
+      }
   }
 
   def getTokenByString(token: String): Future[Option[TokenEntity]] = db.run(tokens.filter(_.token === token).result.headOption)
 
-  def signUp(newUser: UserEntity): Future[String] =
+  def signUp(newUser: UserEntity): Future[Option[TokenResponse]] =
     usersService
       .createUser(newUser)
-      .map(user => Await.result(createToken(user), 5.seconds).token)
+      .map(user => Some(TokenResponse(Await.result(createToken(user), 5.seconds).token)))
 
   def authenticate(token: String): Future[String] =
     getTokenByString(token)
@@ -59,11 +59,11 @@ class AuthService(val databaseService: DatabaseService)(usersService: UsersServi
         case None => false
       }
 
-  def getAuthenticatedUser(token: String): Future[Option[UserResponseEntity]] =
-    usersService.getUserProfileByToken(token)
+  def getAuthenticatedUser(token: String): Future[Option[UserEntity]] =
+    usersService.getUserByToken(token)
 
   def createJwtToken(userEntity: UserEntity): String = {
-    val claimsSet = JwtClaimsSet(Map("userid" -> userEntity.id, "username" -> userEntity.username, "email" -> userEntity.email, "role" -> userEntity.role))
+    val claimsSet = JwtClaimsSet(Map("userid" -> userEntity.id, "username" -> userEntity.username, "fullname" -> userEntity.fullname, "email" -> userEntity.email, "role" -> userEntity.role))
     JsonWebToken(JwtHeader(config.jwtHead), claimsSet, config.jwtSecret)
   }
 

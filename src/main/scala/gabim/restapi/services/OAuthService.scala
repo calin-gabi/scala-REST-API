@@ -77,7 +77,7 @@ class OAuthService(val databaseService: DatabaseService)(usersService: UsersServ
   }
 
   def createUserEntityFromTokenInfo (tokeninfo: Tokeninfo): Future[UserEntity] = {
-    val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), Option(""), Option("user"), None, None, None, None,
+    val newUser: UserEntity = UserEntity(None, tokeninfo.getEmail(), tokeninfo.get("name").toString(), Option(""), Option("user"), None, None, None, None,
     Option(tokeninfo.getEmail()), Option(true), None, None, Option(true), Option(new DateTime()), Option(0))
     usersService.createUser(newUser)
   }
