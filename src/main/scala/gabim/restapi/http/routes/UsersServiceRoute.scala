@@ -73,7 +73,7 @@ class UsersServiceRoute(val authService: AuthService,
           pathEndOrSingleSlash {
             authenticate { loggedUser =>
               get {
-                complete(loggedUser)
+                complete(getUserViewById(loggedUser.id.get))
               } ~
                 post {
                   entity(as[UserEntityUpdate]) { userUpdate =>

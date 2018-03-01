@@ -25,6 +25,9 @@ class UsersService(val databaseService: DatabaseService)(implicit executionConte
 
   def getUserById(id: Long): Future[Option[UserEntity]] = db.run(users.filter(_.id === id).result.headOption)
 
+  def getUserViewById(id: Long): Future[UserViewEntity] = db.run(users.filter(_.id === id).result.headOption)
+    .map(user => UserViewEntity(user.get.id, user.get.username, user.get.fullname, user.get.role, user.get.email,user.get.phone, user.get.active))
+
   def getUserByLogin(login: String): Future[Option[UserEntity]] = db.run(users.filter(_.username === login).result.headOption)
 
   def getUserByOAuth(oauth: UserOAuthEntity): Future[Option[UserEntity]] = {
