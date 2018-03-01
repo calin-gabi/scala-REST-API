@@ -48,8 +48,9 @@ class RecordsService(val databaseService: DatabaseService)(implicit executionCon
       .sortBy(_.date.desc.nullsFirst).result)
 
   def canUpdateRecords(user: UserEntity, userId: Long) =
-    Seq("admin", "manager").contains(user.role) || user.id.get == userId
+    Seq("admin", "manager").contains(user.role.get) || user.id.get == userId
 
-  def canViewRecords(user: UserEntity, userId: Long) =
-    Seq("admin", "manager").contains(user.role) || user.id.get == userId
+  def canViewRecords(user: UserEntity, userId: Long) = {
+    Seq("admin", "manager").contains(user.role.get) || user.id.get == userId
+  }
 }
