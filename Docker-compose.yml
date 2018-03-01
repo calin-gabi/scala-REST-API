@@ -21,6 +21,7 @@ services:
       - .:/code
     environment:
       DATABASE_URL: "jdbc:postgresql://db:5432/restapi?user=admin&password=asdf1234"
+      PSQL_URL: "jdbc:postgresql://db:5432/restapi"
     ports:
       - "9000:9000"
     links:

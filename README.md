@@ -1,4 +1,4 @@
-# Scala AKKA REST API
+# Scala AKKA REST API project
 
 ## Instalation
 
