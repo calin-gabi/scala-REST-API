@@ -47,9 +47,9 @@ class RecordsServiceRoute(val authService: AuthService,
       .result()
 
   implicit val TimestampFormat : Encoder[DateTime] with Decoder[DateTime] = new Encoder[DateTime] with Decoder[DateTime] {
-    override def apply(a: DateTime): Json = Encoder.encodeLong.apply(a.getMillis)
+    override def apply(a: DateTime): Json = Encoder.encodeString.apply(a.toString())
 
-    override def apply(c: HCursor): Result[DateTime] = Decoder.decodeLong.map(s => new DateTime(s)).apply(c)
+    override def apply(c: HCursor): Result[DateTime] = Decoder.decodeString.map(s => new DateTime(s)).apply(c)
   }
 
   val route = pathPrefix("records") {
