@@ -67,7 +67,7 @@ class AuthServiceRoute(val authService: AuthService)
       path("signOut") {
         pathEndOrSingleSlash {
           (post & optionalHeaderValueByName("Authorization")) { key =>
-            complete(authService.deleteToken(key.getOrElse("").replace("Bearer ", "")))
+            complete(authService.deleteToken(key.get.replace("Bearer ", "")))
           }
         }
       }
