@@ -17,4 +17,4 @@ project/plugins/project/
 rest.iml
 
 # PostgreSQL data
-postgres-data/
+db/data/*.*
